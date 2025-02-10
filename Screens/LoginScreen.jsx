@@ -42,7 +42,8 @@ const Login = ({ navigation }) => {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}
+      testID="login-button">
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
