@@ -1,5 +1,5 @@
 import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
-import Login from '../screens/LoginScreen'; // Adjust the path as needed
+import Login from '../Screens/LoginScreen'; // Adjust the path as needed
 import { act } from 'react-test-renderer';
 import AuthService from '../Service/AuthService';
 
