@@ -17,7 +17,7 @@ const HomeScreen = () => {
   return (
     <View>
       <Text>Protected Data:</Text>
-      {data ? <Text>{JSON.stringify(data)}</Text> : <Text>Loading...</Text>}
+      {data ? <Text>{JSON.stringify(data)}</Text> : <Text>Home</Text>}
     </View>
   );
 };
