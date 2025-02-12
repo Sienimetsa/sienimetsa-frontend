@@ -1,10 +1,11 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import API_BASE_URL from '../Config/Config'; 
+import { API_BASE_URL } from '@env';
+
 const login = async (email, password) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/mobile/login`, { email, password });
-    console.log(response.data); // Log the full response
+    console.log(response.data);
 
     if (response.data.token) {
       await AsyncStorage.setItem('jwtToken', response.data.token);
@@ -25,7 +26,6 @@ const login = async (email, password) => {
   }
 };
 
-
 const signup = async (username, password, phone, email, country) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/mobile/signup`, {
@@ -36,8 +36,7 @@ const signup = async (username, password, phone, email, country) => {
       country,
     });
 
-    // Check if the response is successful
-    if (response.status === 201) { // 201 Created
+    if (response.status === 201) {
       console.log('Signup successful');
       return true;
     } else {
@@ -46,7 +45,7 @@ const signup = async (username, password, phone, email, country) => {
     }
   } catch (error) {
     console.error('Error during signup:', error);
-    throw error; // Re-throw the error to handle it in the component
+    throw error;
   }
 };
 
