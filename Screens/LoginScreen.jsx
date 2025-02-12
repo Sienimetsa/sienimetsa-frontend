@@ -10,9 +10,8 @@ const Login = ({ navigation }) => {
   const handleLogin = async () => {
     try {
       const token = await AuthService.login(email, password);
-
       if (token) {
-        navigation.navigate('Home'); // Navigate to Home screen on success
+        navigation.navigate('Main'); // Navigate to the bottom tab navigator
       } else {
         setErrorMessage('Login failed');
       }

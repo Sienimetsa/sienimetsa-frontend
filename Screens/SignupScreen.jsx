@@ -18,7 +18,7 @@ const SignupScreen = ({ navigation }) => {
       if (success) {
         setSuccessMessage('Signup successful!');
         setErrorMessage('');
-        navigation.navigate('Home'); // Navigate to the Home screen after successful signup
+        navigation.navigate('Main'); // Navigate to the bottom tab navigator
       } else {
         setErrorMessage('Signup failed. Please try again.');
         setSuccessMessage('');
