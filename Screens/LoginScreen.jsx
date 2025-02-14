@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import AuthService from '../Service/AuthService';
 
-const Login = ({ navigation }) => {
+const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogin = async () => {
     try {
-      const token = await AuthService.login(email, password);
+      const token = await AuthService.login(email, password, navigation); // Pass navigation to login function
       if (token) {
         navigation.navigate('Main'); // Navigate to the bottom tab navigator
       } else {
@@ -20,6 +20,7 @@ const Login = ({ navigation }) => {
       console.error('Error during login:', error);
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -115,4 +116,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login;
+export default LoginScreen;

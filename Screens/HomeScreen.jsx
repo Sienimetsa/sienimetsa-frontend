@@ -1,31 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Button } from 'react-native';
-import { useNavigation } from '@react-navigation/native';  
-import { makeProtectedRequest } from '../Service/AuthService';  
-
-const HomeScreen = () => {
-  const [data, setData] = useState(null);
+import React, { useContext } from "react";
+import { View, Text, StyleSheet,Button } from "react-native";
+import { AuthContext } from "../Service/AuthContext";
+import { useNavigation } from '@react-navigation/native'; 
+export default function HomeScreen() {
+  const { user, loading } = useContext(AuthContext);
   const navigation = useNavigation();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const responseData = await makeProtectedRequest();
-      setData(responseData);
-    };
-
-    fetchData();
-  }, []);
+  if (loading) {
+    return <Text>Loading...</Text>;
+  }
 
   return (
-    <View>
-      <Text>Protected Data:</Text>
-      {data ? <Text>{JSON.stringify(data)}</Text> : <Text>Home</Text>}
+    <View style={styles.container}>
+      <Text style={styles.welcomeText}>Welcome, {user ? user.email : "Guest"}!</Text>
       <Button
         title="Go to Settings"
         onPress={() => navigation.navigate('Settings')}
       />
     </View>
   );
-};
+}
 
-export default HomeScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+});

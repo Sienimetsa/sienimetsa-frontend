@@ -1,8 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '@env';
+import { jwtDecode } from "jwt-decode";
 
-const login = async (email, password) => {
+
+const login = async (email, password, navigation) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/mobile/login`, { email, password });
     console.log(response.data);
@@ -10,6 +12,14 @@ const login = async (email, password) => {
     if (response.data.token) {
       await AsyncStorage.setItem('jwtToken', response.data.token);
       console.log('Login successful, JWT Token:', response.data.token);
+
+      // Decode token and set user
+      const decoded = jwtDecode(response.data.token);
+      console.log('Decoded JWT:', decoded);
+
+      // Navigate to Main screen after successful login
+      navigation.navigate('Main');  // Ensure you have access to the navigation prop
+
       return response.data.token;
     } else {
       console.error('Login failed');
@@ -26,7 +36,10 @@ const login = async (email, password) => {
   }
 };
 
-const signup = async (username, password, phone, email, country) => {
+
+
+
+const signup = async (username, password, phone, email, country, chatColor = "#000000", profilePicture = "pp-1.png") => {
   try {
     const response = await axios.post(`${API_BASE_URL}/mobile/signup`, {
       username,
@@ -34,17 +47,19 @@ const signup = async (username, password, phone, email, country) => {
       phone,
       email,
       country,
+      chatColor,
+      profilePicture,
     });
 
     if (response.status === 201) {
-      console.log('Signup successful');
+      console.log("Signup successful");
       return true;
     } else {
-      console.error('Signup failed');
+      console.error("Signup failed");
       return false;
     }
   } catch (error) {
-    console.error('Error during signup:', error);
+    console.error("Error during signup:", error);
     throw error;
   }
 };
