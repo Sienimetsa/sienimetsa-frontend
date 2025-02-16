@@ -14,13 +14,10 @@ export default function SettingScreen({ navigation }) {
   const [chatColor, setChatColor] = useState(user?.chatColor || "#000000");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true);
 
-  console.log("API_BASE_URL:", API_BASE_URL); // Debugging the API base URL
-
   // Fetch user data function
   const fetchUserData = async () => {
     try {
       const token = await AsyncStorage.getItem("jwtToken");
-      console.log("Retrieved JWT Token:", token);  // 🔍 Debugging Log
   
       if (!token) {
         console.error("No JWT token found.");
@@ -28,11 +25,10 @@ export default function SettingScreen({ navigation }) {
         return;
       }
   
-      const response = await axios.get(`${API_BASE_URL}/api/profile/appusers`, {
+      const response = await axios.get(`${API_BASE_URL}/api/appusers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      console.log("Profile Response:", response.data);
     } catch (error) {
       console.error("Error fetching profile data:");
       if (error.response) {
@@ -57,39 +53,27 @@ export default function SettingScreen({ navigation }) {
         Alert.alert("Error", "No token found. Please log in again.");
         return;
       }
-
-      const payload = { username, profilePicture, chatColor };
-      if (newPassword) {
-        payload.password = newPassword;
-      }
-
-      const response = await axios.put(`${API_BASE_URL}/mobile/updateProfile`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
+  
+      const payload = {
+        username: username,
+        password: newPassword,
+        profilePicture: profilePicture,
+        chatColor: chatColor,
+      };
+  
+      const response = await axios.put(`${API_BASE_URL}/api/profile/update`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-
-      if (response.status === 200) {
-        Alert.alert("Success", "Profile updated successfully!");
-        fetchUserData(); // Refresh profile after update
-      }
+      console.log(response.data);
     } catch (error) {
       console.error("Error updating profile:", error.response?.data || error.message);
     }
   };
 
-  // Check if username is available
-  const checkUsernameAvailability = async (username) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/mobile/checkUsername`, {
-        params: { username },
-      });
-
-      setIsUsernameAvailable(response.data.isAvailable);
-    } catch (error) {
-      console.error("Error checking username:", error.message);
-    }
-  };
-
-  // Change profile picture randomly
+  //TODO: To be changed later to pop-up window
   const changeProfilePicture = () => {
     const profilePictures = Object.keys(profilePictureMap);
     const randomPicture = profilePictures[Math.floor(Math.random() * profilePictures.length)];
@@ -113,7 +97,6 @@ export default function SettingScreen({ navigation }) {
         value={username}
         onChangeText={(text) => {
           setUsername(text);
-          checkUsernameAvailability(text);
         }}
         placeholder="Enter new username"
       />
