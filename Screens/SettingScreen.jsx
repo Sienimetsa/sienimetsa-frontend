@@ -73,6 +73,7 @@ export default function SettingScreen({ navigation }) {
     }
   };
 
+  //TODO: To be changed later to pop-up window
   const changeProfilePicture = () => {
     const profilePictures = Object.keys(profilePictureMap);
     const randomPicture = profilePictures[Math.floor(Math.random() * profilePictures.length)];
