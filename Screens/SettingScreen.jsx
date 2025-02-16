@@ -28,7 +28,7 @@ export default function SettingScreen({ navigation }) {
         return;
       }
   
-      const response = await axios.get(`${API_BASE_URL}/api/profile/appusers`, {
+      const response = await axios.get(`${API_BASE_URL}/api/appusers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -63,7 +63,7 @@ export default function SettingScreen({ navigation }) {
         payload.password = newPassword;
       }
 
-      const response = await axios.put(`${API_BASE_URL}/mobile/updateProfile`, payload, {
+      const response = await axios.put(`${API_BASE_URL}/api/appusers`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -79,7 +79,7 @@ export default function SettingScreen({ navigation }) {
   // Check if username is available
   const checkUsernameAvailability = async (username) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/mobile/checkUsername`, {
+      const response = await axios.get(`${API_BASE_URL}/api/appusers`, {
         params: { username },
       });
 
