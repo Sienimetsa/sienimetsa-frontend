@@ -28,13 +28,19 @@ export default function SettingScreen({ navigation }) {
         return;
       }
   
-      const response = await axios.get(`${API_BASE_URL}/mobile/profile`, {
+      const response = await axios.get(`${API_BASE_URL}/api/profile/appusers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      console.log("Profile Response:", response.data);  // 🔍 Debugging Log
+      console.log("Profile Response:", response.data);
     } catch (error) {
-      console.error("Error fetching profile data:", error.response?.data || error.message);
+      console.error("Error fetching profile data:");
+      if (error.response) {
+        console.error("Response Error Status:", error.response.status);
+        console.error("Response Error Data:", error.response.data);
+      } else {
+        console.error("Error Message:", error.message);
+      }
     }
   };
   
