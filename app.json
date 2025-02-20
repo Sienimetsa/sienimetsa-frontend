@@ -1,5 +1,15 @@
 {
   "expo": {
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Sienimetsä to access your camera",
+          "microphonePermission": "Allow Sienimetsä to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
+    ],
     "name": "sienimetsa-frontend",
     "slug": "sienimetsa-frontend",
     "version": "1.0.0",
