@@ -1,5 +1,13 @@
 {
   "expo": {
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Sienimetsä to access your camera"
+        }
+      ]
+    ],
     "name": "sienimetsa-frontend",
     "slug": "sienimetsa-frontend",
     "version": "1.0.0",
