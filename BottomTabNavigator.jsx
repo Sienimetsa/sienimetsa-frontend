@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { Button } from 'react-native';
 import ChatScreen from './Screens/ChatScreen';
 import HomeScreen from './Screens/HomeScreen';
 import LibraryScreen from './Screens/LibraryScreen';
+import { AuthContext } from './Service/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
-export default function BottomTabNavigator() {
+export default function BottomTabNavigator({ navigation }) {
+  const { logout } = useContext(AuthContext);  // Get logout function from AuthContext
+
+  // Handle logout logic
+  const handleLogout = async () => {
+    await logout();  // Call the logout function from the context
+    navigation.navigate('Login');  // Navigate to the login screen after logout
+  };
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -28,7 +38,13 @@ export default function BottomTabNavigator() {
       })}
     >
       <Tab.Screen name="Chat" component={ChatScreen} />
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} 
+        options={{
+          headerRight: () => (
+            <Button title="Log Out" onPress={handleLogout} color="black" />
+          ),
+        }} 
+      />
       <Tab.Screen name="Library" component={LibraryScreen} />
     </Tab.Navigator>
   );
