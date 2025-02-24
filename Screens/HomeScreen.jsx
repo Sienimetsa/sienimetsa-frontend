@@ -9,7 +9,6 @@ export default function HomeScreen() {
 
   const { user, loading } = useContext(AuthContext);
   const navigation = useNavigation();
-
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -54,7 +53,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
 
       {/* WELCOME MESSAGE BLOCK */}
-      <Text style={styles.welcomeText}>Welcome, {user ? user.email : "Guest"}!</Text>
+      <Text style={styles.welcomeText}>Welcome, {user ? user.email : "Loading"}!</Text>
 
       {/* SETTINGS BUTTON BLOCK */}
       <Button

@@ -12,36 +12,29 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
+// fetch user data on token change
   useEffect(() => {
-    const loadUser = async () => {
-        try {
-            const token = await AsyncStorage.getItem("jwtToken");
-            console.log("Token retrieved from AsyncStorage:", token); // Debugging
-
-            if (token) {
-                const decoded = jwtDecode(token);
-                console.log("Decoded Token:", decoded); // Debugging
-                const userData = { email: decoded.sub || null };
-
-                if (userData.email) {
-                    setUser(userData); // Update user state only if email exists
-                    console.log("User data set:", userData); // Debugging user data set
-                }
-            }
-            setLoading(false); // Set loading to false when token processing is done
-        } catch (error) {
-            console.error("Error loading user:", error);
-            setLoading(false);
+    const reloadUserOnTokenChange = async () => {
+        const token = await AsyncStorage.getItem("jwtToken");
+        if (token) {
+            const decoded = jwtDecode(token);
+            setUser({ email: decoded.sub || null });
+        } else {
+            setUser(null);
         }
+        setLoading(false);
     };
 
-    loadUser();
-}, []); // Only runs once when component mounts
+    const interval = setInterval(reloadUserOnTokenChange, 1000); // Check token every 5 seconds
+    return () => clearInterval(interval);
+}, []);
 
-  
+
+
   const deleteAccount = async () => {
     try {
-      const token = await AsyncStorage.getItem("jwtToken");
+      const token = await AsyncStorage.getItem("jwtToken"); // Get token from AsyncStorage
       if (!token) {
         Alert.alert("Error", "No token found. Please log in again.");
         return false;
@@ -53,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
 
-      const response = await axios.delete(`${API_BASE_URL}/api/profile/delete`, {
+      const response = await axios.delete(`${API_BASE_URL}/api/profile/delete`, { //  Send a DELETE request to the server
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -91,6 +84,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      await AsyncStorage.clear();
       await AsyncStorage.removeItem("jwtToken");
     setUser(null);
       console.log("User logged out.");
