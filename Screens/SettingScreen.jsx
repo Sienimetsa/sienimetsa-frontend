@@ -8,109 +8,34 @@ import { AuthContext } from "../Service/AuthContext";
 import { jwtDecode } from "jwt-decode";
 
 export default function SettingScreen({ navigation }) {
-  const { user, setUser, logout } = useContext(AuthContext); 
+  const { user, setUser, logout } = useContext(AuthContext);
   const [username, setUsername] = useState(user?.username || "");
   const [newPassword, setNewPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState(user?.profilePicture || "pp1");
   const [chatColor, setChatColor] = useState(user?.chatColor || "#000000");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true);
+  const { deleteAccount } = useContext(AuthContext);
+
 
   // Fetch user data function
-  const fetchUserData = async () => {
-    try {
-      const token = await AsyncStorage.getItem("jwtToken");
-      console.log("Retrieved Token in SettingScreen:", token); // Debug
-      if (!token) {
-        console.error("No JWT token found.");
-        navigation.navigate("Login");
-        return;
-      }
-  
-      // Decode the token to extract user data
-      const decoded = jwtDecode(token);
-      console.log("Decoded Token in SettingScreen:", decoded); // Debug
-  
-      // Store the decoded user ID in state or context
-      const u_id = decoded.uId || decoded.u_id;
-      if (!u_id) {
-        console.error("No user ID found in the token.");
-        return;
-      }
-  
-      // Fetch user data using the decoded u_id
-      const response = await axios.get(`${API_BASE_URL}/api/appusers/${u_id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-      // Update user state with fetched data
-      setUser(response.data); // Use setUser from AuthContext
-  
-    } catch (error) {
-      console.error("Error fetching profile data:");
-      if (error.response) {
-        console.error("Response Error Status:", error.response.status);
-        console.error("Response Error Data:", error.response.data);
-      } else {
-        console.error("Error Message:", error.message);
-      }
-    }
-  };
-
   useEffect(() => {
-    fetchUserData();
-  }, []);
-
-
-const deleteUser = async () => {
-
-
-  try {
-    // Retrieve the JWT token from AsyncStorage
-    const token = await AsyncStorage.getItem('jwtToken');
-    if (!token) {
-      console.error('No token found');
-      await logout();  // Logout if no token is found
-      navigation.navigate('Login');
-      return;
+    if (!user) {
+      navigation.navigate("Login"); //if user is not found redirect to loginScreen
     }
+  }, [user]);
 
-    // Decode the token to extract the user ID (u_id)
-    const decoded = jwtDecode(token);
-    const u_id = decoded.uId || decoded.u_id; // Ensure compatibility with different token formats
-  console.log('Decoded Token in SettingScreen:', decoded);  // Debug
-    if (!u_id) {
-      console.error('No user ID found in the token');
-      return;
-    }
-
-    console.log('Deleting user with ID:', u_id);
-
-    // Send a DELETE request to the server
-    const response = await axios.delete(`${API_BASE_URL}/api/profile/delete/${u_id}`, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      validateStatus: (status) => status < 500,  // Allow non-2xx responses
-    });
-
-    if (response.status === 200) {
-      console.log('User deleted successfully:', response.data);
+  const handleDelete = async () => {
+    const success = await deleteAccount();
+    if (success) {
       await logout();  // Logout after deleting the user
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' }],
       });
     } else {
-      console.error('Failed to delete user:', response.status, response.data);
+      Alert.alert("Failed to delete account.");
     }
-  } catch (error) {
-    console.error('Error deleting user:', error.message);
-  }
-};
-
-  
-
+  };
 
   // Update user profile
   const updateProfile = async () => {
@@ -120,14 +45,14 @@ const deleteUser = async () => {
         Alert.alert("Error", "No token found. Please log in again.");
         return;
       }
-  
+
       const payload = {
         username: username,
         password: newPassword,
         profilePicture: profilePicture,
         chatColor: chatColor,
       };
-  
+
       const response = await axios.put(`${API_BASE_URL}/api/profile/update`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -190,7 +115,7 @@ const deleteUser = async () => {
 
       {/* Save Button */}
       <Button title="Save Changes" onPress={updateProfile} color="#007BFF" />
-      <Button title="Delete Account" onPress={deleteUser} color="red" />
+      <Button title="Delete Account" onPress={handleDelete} color="red" />
     </View>
   );
 }

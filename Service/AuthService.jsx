@@ -9,9 +9,12 @@ const login = async (email, password) => {
     if (response.data.token) {
       await AsyncStorage.setItem("jwtToken", response.data.token);
       console.log("Token stored in AsyncStorage:", response.data.token); // Debug token storage
+
       const decoded = jwtDecode(response.data.token);
       console.log("Decoded Token:", decoded); // Debug decoded token
-      const userData = { email: decoded.sub, u_id: decoded.uId || null };
+
+      const userData = { email: decoded.sub }; 
+       // Only store the email
       return userData; // Return user data instead of setting it here
     }
     return null; // Return null if no token is found
@@ -21,9 +24,7 @@ const login = async (email, password) => {
   }
 };
 
-
-
-const signup = async (username, password, phone, email, country, chatColor = "#000000", profilePicture = "pp-1.png") => {
+const signup = async (username, password, phone, email, country, chatColor, profilePicture ) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/mobile/signup`, {
       username,
@@ -48,7 +49,34 @@ const signup = async (username, password, phone, email, country, chatColor = "#0
   }
 };
 
+const deleteUserAccount = async (email) => {
+  try {
+    const token = await AsyncStorage.getItem("jwtToken");
+    if (!token) {
+      console.error("No token found, cannot delete account");
+      return { success: false, message: "No authentication token" };
+    }
+
+    if (!email) {
+      console.error("No user ID provided, cannot delete account");
+      return { success: false, message: "Missing user ID" };
+    }
+
+    const response = await axios.delete(`${API_BASE_URL}/api/profile/delete/${email}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting user:", error.response?.data || error.message);
+    return { success: false, message: "Server error" };
+  }
+};
+
 export default {
   login,
   signup,
+  deleteUserAccount
 };

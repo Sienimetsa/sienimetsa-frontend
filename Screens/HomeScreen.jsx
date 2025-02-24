@@ -13,6 +13,7 @@ export default function HomeScreen() {
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
 
+  
   // ask for camera permission on page load
   useEffect(() => {
     const requestCameraPermission = () => {
