@@ -9,7 +9,7 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const token = await AuthService.login(email, password, navigation); // Pass navigation to login function
+      const token = await AuthService.login(email, password); // Pass navigation to login function
       if (token) {
         navigation.navigate('Main'); // Navigate to the bottom tab navigator
       } else {

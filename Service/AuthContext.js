@@ -26,10 +26,9 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     };
 
-    const interval = setInterval(reloadUserOnTokenChange, 1000); // Check token every 5 seconds
+    const interval = setInterval(reloadUserOnTokenChange, 5000); // Check token every 5 seconds
     return () => clearInterval(interval);
 }, []);
-
 
 
   const deleteAccount = async () => {
@@ -99,3 +98,4 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
