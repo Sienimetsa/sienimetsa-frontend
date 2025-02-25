@@ -1,51 +1,59 @@
+
 import React, { createContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 import AuthService from "./AuthService";
 import axios from 'axios';
-import { Alert } from 'react-native'; 
+import { Alert } from 'react-native';
 import { API_BASE_URL } from "@env";  
 
-export const AuthContext = createContext();
+// Creates a context to hold global state for user data, login/logout functions, etc.)
+export const AuthContext = createContext(); //  'AuthContext' is the object that holds the authentication state
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null); // stores user information that can be used around the app. For example: user.email and use.usernam
+  const [loading, setLoading] = useState(true); //  State to track if the app is still loading user data
 
+  // Helper function to get token from AsyncStorage
+  const getToken = async () => {
+    return await AsyncStorage.getItem("jwtToken");
+  };
 
-// fetch user data on token change
+  // Effect to check the user's authentication status when the component mounts
   useEffect(() => {
-    const reloadUserOnTokenChange = async () => {
-        const token = await AsyncStorage.getItem("jwtToken");
-        if (token) {
-            const decoded = jwtDecode(token);
-            setUser({ email: decoded.sub || null });
-        } else {
-            setUser(null);
-        }
-        setLoading(false);
+    const checkTokenAndSetUser = async () => {
+      const token = await getToken();
+      // If there's a token, decode it to get the user data
+      if (token) {
+        const decoded = jwtDecode(token); // Decodes the token to get user data
+        setUser({ email: decoded.sub || null ,
+        });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
     };
 
-    const interval = setInterval(reloadUserOnTokenChange, 5000); // Check token every 5 seconds
-    return () => clearInterval(interval);
-}, []);
+    checkTokenAndSetUser(); // Initial check when the component mounts
+  }, []); // Empty array ensures this effect runs once when the component mounts
 
 
+   // DELETE: Function to delete a user's account from the backend
   const deleteAccount = async () => {
     try {
-      const token = await AsyncStorage.getItem("jwtToken"); // Get token from AsyncStorage
+      const token = await getToken(); // Get the stored token to authenticate the request
       if (!token) {
         Alert.alert("Error", "No token found. Please log in again.");
         return false;
       }
 
-      const email = user?.email;
+      const email = user?.email; // Get the email from the user object
       if (!email) {
         Alert.alert("Error", "No email found. Cannot delete account.");
         return false;
       }
-
-      const response = await axios.delete(`${API_BASE_URL}/api/profile/delete`, { //  Send a DELETE request to the server
+  
+      const response = await axios.delete(`${API_BASE_URL}/api/profile/delete`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -65,12 +73,13 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
+  // Login function
   const login = async (email, password) => {
     try {
-      const userData = await AuthService.login(email, password);
-      console.log("User data returned from AuthService:", userData); // Debugging
+      const userData = await AuthService.login(email, password); // Calls AuthService login function
+      console.log("User data returned from AuthService:", userData); 
       if (userData) {
-        setUser(userData);
+        setUser(userData); // Set the user data in the state
         console.log("User logged in:", userData);
         return true;
       }
@@ -81,11 +90,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Logout function
   const logout = async () => {
     try {
       await AsyncStorage.clear();
-      await AsyncStorage.removeItem("jwtToken");
-    setUser(null);
+      setUser(null);
       console.log("User logged out.");
     } catch (error) {
       console.error("Logout error:", error);
@@ -98,4 +107,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
 

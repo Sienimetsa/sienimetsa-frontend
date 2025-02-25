@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import AuthService from '../Service/AuthService';
+import React, { useState,useContext } from 'react';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { AuthContext } from '../Service/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
+  const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogin = async () => {
-    try {
-      const token = await AuthService.login(email, password); // Pass navigation to login function
-      if (token) {
-        navigation.navigate('Main'); // Navigate to the bottom tab navigator
-      } else {
-        setErrorMessage('Login failed');
-      }
-    } catch (error) {
+    const success = await login(email, password); //  gets AuthContext logic for login
+    if (success) {
+      navigation.navigate('Main');
+    } else {
       setErrorMessage('Login failed. Please check your credentials.');
-      console.error('Error during login:', error);
     }
   };
   

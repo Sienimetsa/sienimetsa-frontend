@@ -9,9 +9,8 @@ import { API_BASE_URL } from "@env";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
 
-
 export default function SettingScreen({ navigation }) {
-  const { user, setUser, logout, deleteAccount } = useContext(AuthContext);
+  const { user, setUser, logout, deleteAccount } = useContext(AuthContext); // Retrieve user data and actions from AuthContext
   const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState("pp1");
@@ -37,10 +36,10 @@ export default function SettingScreen({ navigation }) {
 
         if (response.status === 200) {
           const userData = response.data;
-          setUser(userData); // Update AuthContext user
-          setUsername(userData.username);
-          setProfilePicture(userData.profilePicture);
-          setChatColor(userData.chatColor);
+          setUser(userData); // Update global user context
+          setUsername(userData.username); 
+          setProfilePicture(userData.profilePicture); 
+          setChatColor(userData.chatColor); 
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -64,19 +63,19 @@ export default function SettingScreen({ navigation }) {
   // Update user profile
   const updateProfile = async () => {
     try {
-      const token = await AsyncStorage.getItem("jwtToken");
+      const token = await AsyncStorage.getItem("jwtToken"); // Retrieve token to authorize the update
       if (!token) {
         Alert.alert("Error", "No token found. Please log in again.");
         return;
       }
-  
+      // Prepare the payload with updated profile data
       const payload = {
         username: username,
         password: newPassword,
         profilePicture: profilePicture,
         chatColor: chatColor,
       };
-  
+      // Make API request to update the user profile
       const response = await axios.put(`${API_BASE_URL}/api/profile/update`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
