@@ -54,6 +54,7 @@ export default function HomeScreen() {
 
       {/* WELCOME MESSAGE BLOCK */}
       <Text style={styles.welcomeText}>Welcome, {user ? user.email : "Loading"}!</Text>
+     
 
       {/* SETTINGS BUTTON BLOCK */}
       <Button
