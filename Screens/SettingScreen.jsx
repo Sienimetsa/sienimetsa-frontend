@@ -1,49 +1,65 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TextInput, Button, Alert, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { 
+  View, Text, TextInput, Button, Alert, Image, TouchableOpacity, 
+  StyleSheet, Modal, FlatList 
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_BASE_URL } from "@env";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
 
+
 export default function SettingScreen({ navigation }) {
-  const { user, setUser } = useContext(AuthContext);
-  const [username, setUsername] = useState(user?.username || "");
+  const { user, setUser, logout, deleteAccount } = useContext(AuthContext);
+  const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || "pp1");
-  const [chatColor, setChatColor] = useState(user?.chatColor || "#000000");
+  const [profilePicture, setProfilePicture] = useState("pp1");
+  const [chatColor, setChatColor] = useState("#000000");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState("");
 
-  // Fetch user data function
-  const fetchUserData = async () => {
-    try {
-      const token = await AsyncStorage.getItem("jwtToken");
-  
-      if (!token) {
-        console.error("No JWT token found.");
-        navigation.navigate("Login");
-        return;
-      }
-  
-      const response = await axios.get(`${API_BASE_URL}/api/appusers`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-    } catch (error) {
-      console.error("Error fetching profile data:");
-      if (error.response) {
-        console.error("Response Error Status:", error.response.status);
-        console.error("Response Error Data:", error.response.data);
-      } else {
-        console.error("Error Message:", error.message);
-      }
-    }
-  };
-  
-
+  // Fetch user data when the settings screen loads
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem("jwtToken");
+        if (!token) {
+          navigation.navigate("Login"); // Redirect if no token
+          return;
+        }
+
+        // Fetch user data from API
+        const response = await axios.get(`${API_BASE_URL}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.status === 200) {
+          const userData = response.data;
+          setUser(userData); // Update AuthContext user
+          setUsername(userData.username);
+          setProfilePicture(userData.profilePicture);
+          setChatColor(userData.chatColor);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
     fetchUserData();
   }, []);
+
+  // Handle account deletion
+  const handleDelete = async () => {
+    const success = await deleteAccount();
+    if (success) {
+      await logout();  // Logout after deleting the user
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    } else {
+      Alert.alert("Failed to delete account.");
+    }
+  };
 
   // Update user profile
   const updateProfile = async () => {
@@ -67,37 +83,62 @@ export default function SettingScreen({ navigation }) {
           "Content-Type": "application/json",
         },
       });
-      console.log(response.data);
+
+      if (response.status === 200) {
+        Alert.alert("Profile updated successfully!");
+        setUpdateMessage("Profile updated successfully!"); // Show message
+        setTimeout(() => setUpdateMessage(""), 3000); // Clear after 3 sec
+      }
     } catch (error) {
       console.error("Error updating profile:", error.response?.data || error.message);
     }
   };
 
-  //TODO: To be changed later to pop-up window
-  const changeProfilePicture = () => {
-    const profilePictures = Object.keys(profilePictureMap);
-    const randomPicture = profilePictures[Math.floor(Math.random() * profilePictures.length)];
-    setProfilePicture(randomPicture);
+  // Open profile picture selection modal
+  const openProfilePictureModal = () => setModalVisible(true);
+
+  // Select profile picture
+  const selectProfilePicture = (pictureKey) => {
+    setProfilePicture(pictureKey);
+    setModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Edit Profile</Text>
 
-      {/* Profile Picture */}
-      <TouchableOpacity onPress={changeProfilePicture}>
+      {/* Profile Picture Selection */}
+      <TouchableOpacity onPress={openProfilePictureModal}>
         <Image source={profilePictureMap[profilePicture]} style={styles.profileImage} />
         <Text style={styles.changeText}>Change Profile Picture</Text>
       </TouchableOpacity>
+
+      {/* Modal for Selecting Profile Picture */}
+      <Modal visible={modalVisible} animationType="fade" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Choose Profile Picture</Text>
+            <FlatList
+              data={Object.keys(profilePictureMap)}
+              numColumns={3}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => selectProfilePicture(item)}>
+                  <Image source={profilePictureMap[item]} style={styles.modalImage} />
+                </TouchableOpacity>
+              )}
+            />
+            <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+          </View>
+        </View>
+      </Modal>
 
       {/* Username Input */}
       <Text style={styles.label}>Username</Text>
       <TextInput
         style={styles.input}
         value={username}
-        onChangeText={(text) => {
-          setUsername(text);
-        }}
+        onChangeText={setUsername}
         placeholder="Enter new username"
       />
       {!isUsernameAvailable && <Text style={styles.errorText}>Username is already taken</Text>}
@@ -123,6 +164,9 @@ export default function SettingScreen({ navigation }) {
 
       {/* Save Button */}
       <Button title="Save Changes" onPress={updateProfile} color="#007BFF" />
+      <Button title="Delete Account" onPress={handleDelete} color="red" />
+      {updateMessage ? <Text style={styles.successMessage}>{updateMessage}</Text> : null}
+
     </View>
   );
 }
@@ -169,5 +213,36 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 14,
     marginTop: 5,
+  },
+  successMessage: {
+    color: "green",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Dim background
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalImage: {
+    width: 80,
+    height: 80,
+    margin: 10,
+    borderRadius: 40,
   },
 });

@@ -3,43 +3,28 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '@env';
 import { jwtDecode } from "jwt-decode";
 
-
-const login = async (email, password, navigation) => {
+const login = async (email, password) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/mobile/login`, { email, password });
-    console.log(response.data);
-
     if (response.data.token) {
-      await AsyncStorage.setItem('jwtToken', response.data.token);
-      console.log('Login successful, JWT Token:', response.data.token);
+      await AsyncStorage.setItem("jwtToken", response.data.token);
+      console.log("Token stored in AsyncStorage:", response.data.token); // Debug token storage
 
-      // Decode token and set user
       const decoded = jwtDecode(response.data.token);
-      console.log('Decoded JWT:', decoded);
+      console.log("Decoded Token:", decoded); // Debug decoded token
 
-      // Navigate to Main screen after successful login
-      navigation.navigate('Main');  // Ensure you have access to the navigation prop
-
-      return response.data.token;
-    } else {
-      console.error('Login failed');
-      return null;
+      const userData = { email: decoded.sub }; 
+       // Only store the email
+      return userData; // Return user data instead of setting it here
     }
+    return null; // Return null if no token is found
   } catch (error) {
-    console.error('Error during login:', error.message);
-    if (error.response) {
-      console.error('Response Error:', error.response);
-    } else {
-      console.error('Error Details:', error);
-    }
-    throw error;
+    console.error("Login error:", error);
+    throw error; // Throw the error to handle it in the AuthProvider
   }
 };
 
-
-
-
-const signup = async (username, password, phone, email, country, chatColor = "#000000", profilePicture = "pp-1.png") => {
+const signup = async (username, password, phone, email, country, chatColor, profilePicture ) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/mobile/signup`, {
       username,
@@ -64,7 +49,34 @@ const signup = async (username, password, phone, email, country, chatColor = "#0
   }
 };
 
+const deleteUserAccount = async (email) => {
+  try {
+    const token = await AsyncStorage.getItem("jwtToken");
+    if (!token) {
+      console.error("No token found, cannot delete account");
+      return { success: false, message: "No authentication token" };
+    }
+
+    if (!email) {
+      console.error("No user ID provided, cannot delete account");
+      return { success: false, message: "Missing user ID" };
+    }
+
+    const response = await axios.delete(`${API_BASE_URL}/api/profile/delete/${email}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting user:", error.response?.data || error.message);
+    return { success: false, message: "Server error" };
+  }
+};
+
 export default {
   login,
   signup,
+  deleteUserAccount
 };
