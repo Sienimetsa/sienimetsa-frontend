@@ -15,7 +15,6 @@ export default function SettingScreen({ navigation }) {
   const [newPassword, setNewPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState("pp1");
   const [chatColor, setChatColor] = useState("#000000");
-  const [isUsernameAvailable, setIsUsernameAvailable] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [updateMessage, setUpdateMessage] = useState("");
 
@@ -140,7 +139,6 @@ export default function SettingScreen({ navigation }) {
         onChangeText={setUsername}
         placeholder="Enter new username"
       />
-      {!isUsernameAvailable && <Text style={styles.errorText}>Username is already taken</Text>}
 
       {/* Chat Color Input */}
       <Text style={styles.label}>Chat Color</Text>
