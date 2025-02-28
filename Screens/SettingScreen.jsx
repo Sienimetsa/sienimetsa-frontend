@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useContext } from "react";
-import { 
-  View, Text, TextInput, Button, Alert, Image, TouchableOpacity, 
-  StyleSheet, Modal, FlatList 
+import {
+  View, Text, TextInput, Button, Alert, Image, TouchableOpacity,
+  StyleSheet, Modal, FlatList
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_BASE_URL } from "@env";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
+import { fetchUserData } from "../Components/Fetch.js";
 
 export default function SettingScreen({ navigation }) {
   const { user, setUser, logout, deleteAccount } = useContext(AuthContext); // Retrieve user data and actions from AuthContext
@@ -20,32 +21,20 @@ export default function SettingScreen({ navigation }) {
 
   // Fetch user data when the settings screen loads
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = await AsyncStorage.getItem("jwtToken");
-        if (!token) {
-          navigation.navigate("Login"); // Redirect if no token
-          return;
+    const fetchData = async () => {
+      const result = await fetchUserData(setUser);
+      if (!result.error) {
+        setUsername(result.username);
+        setProfilePicture(result.profilePicture);
+        setChatColor(result.chatColor);
+      } else {
+        if (result.error === "No JWT token found.") {
+          navigation.navigate("Login");
         }
-
-        // Fetch user data from API
-        const response = await axios.get(`${API_BASE_URL}/api/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (response.status === 200) {
-          const userData = response.data;
-          setUser(userData); // Update global user context
-          setUsername(userData.username); 
-          setProfilePicture(userData.profilePicture); 
-          setChatColor(userData.chatColor); 
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
       }
     };
-
-    fetchUserData();
+  
+    fetchData();
   }, []);
 
   // Handle account deletion

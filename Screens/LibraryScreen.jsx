@@ -1,41 +1,26 @@
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-import { API_BASE_URL } from "@env";
+import { fetchMushroomsData } from '../Components/Fetch';
 
 export default function LibraryScreen() {
   const [data, setData] = useState([])
 
-  // Fetch mushrooms data function
-  const fetchMushroomsData = async () => {
-    try {
-      const token = await AsyncStorage.getItem("jwtToken");
-
-      if (!token) {
-        console.error("No JWT token found.");
-        navigation.navigate("Login");
-        return;
-      }
-
-      const response = await axios.get(`${API_BASE_URL}/api/mushrooms`, {
-        headers: { Authorization : `Bearer ${token}` },
-      });
-
-      if (response.status !== 200) {
-        throw new Error('Network response was not ok');
-      }
-
-      const json = response.data;
-      setData(json._embedded.mushrooms);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
+  // Call fetch mushrooms data function
   useEffect(() => {
-    fetchMushroomsData();
+    const fetchData = async () => {
+      const result = await fetchMushroomsData();
+      if (!result.error) {
+        setData(result);
+      } else {
+        if (result.error === "No JWT token found.") {
+          navigation.navigate("Login");
+        }
+      }
+    };
+
+    fetchData();
   }, []);
+
 
   // Render mushroom data
   const renderItem = ({ item }) => (
@@ -50,7 +35,7 @@ export default function LibraryScreen() {
       <FlatList
         data={data}
         renderItem={renderItem}
-        keyExtractor={item => item.m_Id.toString()}
+        keyExtractor={item => item.m_id.toString()}
       />
     </View>
   )
