@@ -12,7 +12,7 @@ export default function HomeScreen() {
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
 
-  
+
   // ask for camera permission on page load
   useEffect(() => {
     const requestCameraPermission = () => {
@@ -39,6 +39,11 @@ export default function HomeScreen() {
       <View style={styles.container}>
         <Text style={styles.message}>We need your permission to show the camera</Text>
         <Button onPress={requestPermission} title="grant permission" />
+        {/* SETTINGS BUTTON BLOCK */}
+        <Button
+          title="Go to Settings"
+          onPress={() => navigation.navigate('Settings')}
+        />
       </View>
     );
   }
@@ -54,7 +59,7 @@ export default function HomeScreen() {
 
       {/* WELCOME MESSAGE BLOCK */}
       <Text style={styles.welcomeText}>Welcome, {user ? user.email : "Loading"}!</Text>
-     
+
 
       {/* SETTINGS BUTTON BLOCK */}
       <Button
