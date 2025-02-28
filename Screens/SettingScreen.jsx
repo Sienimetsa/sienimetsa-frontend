@@ -8,7 +8,7 @@ import axios from "axios";
 import { API_BASE_URL } from "@env";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
-import { fetchUserData } from "../Components/Fetch.js";
+import { fetchCurrentUser,fetchAllUsers } from "../Components/Fetch.js";
 
 export default function SettingScreen({ navigation }) {
   const { user, setUser, logout, deleteAccount } = useContext(AuthContext); // Retrieve user data and actions from AuthContext
@@ -18,11 +18,12 @@ export default function SettingScreen({ navigation }) {
   const [chatColor, setChatColor] = useState("#000000");
   const [modalVisible, setModalVisible] = useState(false);
   const [updateMessage, setUpdateMessage] = useState("");
+  const [usernameError, setUsernameError] = useState(""); 
 
   // Fetch user data when the settings screen loads
   useEffect(() => {
     const fetchData = async () => {
-      const result = await fetchUserData(setUser);
+      const result = await fetchCurrentUser(setUser);
       if (!result.error) {
         setUsername(result.username);
         setProfilePicture(result.profilePicture);
@@ -37,6 +38,41 @@ export default function SettingScreen({ navigation }) {
     fetchData();
   }, []);
 
+
+
+// Check username availability
+ const checkUsernameAvailability = async () => {
+  try {
+    const usersData = await fetchAllUsers(); // Fetch all users
+
+    // Check if usersData and _embedded.appusers exist
+    if (!usersData || !usersData._embedded || !usersData._embedded.appusers) {
+      console.error("Error: Unexpected response structure", usersData);
+      setUsernameError("Error fetching users.");
+      return false;
+    }
+
+    // Filter out the current user's username
+    const otherUsers = usersData._embedded.appusers.filter(appUser => appUser.username !== user.username);
+
+    // Check if the username already exists in the filtered 'appusers' array
+    const isUsernameTaken = otherUsers.some(appUser => appUser.username === username);
+
+    if (isUsernameTaken) {
+      setUsernameError("Username is already taken!");
+      return false;
+    } else {
+      setUsernameError(""); // Clear error if username is available
+      return true;
+    }
+  } catch (error) {
+    console.error("Error checking username:", error);
+    setUsernameError("Error checking username.");
+    return false;
+  }
+};
+  
+
   // Handle account deletion
   const handleDelete = async () => {
     const success = await deleteAccount();
@@ -50,6 +86,13 @@ export default function SettingScreen({ navigation }) {
 
   // Update user profile
   const updateProfile = async () => {
+
+    const isUsernameAvailable = await checkUsernameAvailability(); // Check username availability before proceeding
+
+    if (!isUsernameAvailable) {
+      return; // If the username is not available, stop the profile update
+    }
+
     try {
       const token = await AsyncStorage.getItem("jwtToken"); // Retrieve token to authorize the update
       if (!token) {
@@ -153,6 +196,8 @@ export default function SettingScreen({ navigation }) {
       <Button title="Delete Account" onPress={handleDelete} color="red" />
       {updateMessage ? <Text style={styles.successMessage}>{updateMessage}</Text> : null}
 
+     {/* Show Username Error Message */}
+    {usernameError ? (<Text style={usernameError === "Username is already taken!" ? styles.errorMessage : null}>{usernameError}</Text>) : null}
     </View>
   );
 }
@@ -202,6 +247,13 @@ const styles = StyleSheet.create({
   },
   successMessage: {
     color: "green",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  errorMessage: {
+    color: "red",
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
