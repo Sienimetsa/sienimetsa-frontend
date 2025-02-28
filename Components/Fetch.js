@@ -32,8 +32,8 @@ export const fetchMushroomsData = async () => {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//FETCH USER DATA
-export const fetchUserData = async (setUser) => {
+//FETCH CURRENT USER DATA
+export const fetchCurrentUser = async (setUser) => {
   try {
     const token = await AsyncStorage.getItem("jwtToken");
     if (!token) {
@@ -57,3 +57,23 @@ export const fetchUserData = async (setUser) => {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// FETCH ALL USER DATA
+export const fetchAllUsers = async () => {
+  try {
+    const token = await AsyncStorage.getItem("jwtToken");
+    if (!token) {
+      console.error("No JWT token found.");
+      return { error: "No JWT token found." };
+    }
+    const response = await axios.get(`${API_BASE_URL}/api/appusers`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.status === 200) {
+      return response.data;
+    }
+  } catch (error) {
+    console.error("Error fetching app users:", error);
+    return { error };
+  }
+};
