@@ -3,6 +3,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_BASE_URL } from "@env";
+import { jwtDecode } from "jwt-decode";
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //FETCH MUSHROOMS DATA
 export const fetchMushroomsData = async () => {
@@ -30,7 +33,6 @@ export const fetchMushroomsData = async () => {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 //FETCH CURRENT USER DATA
 export const fetchCurrentUser = async (setUser) => {
@@ -74,6 +76,32 @@ export const fetchAllUsers = async () => {
     }
   } catch (error) {
     console.error("Error fetching app users:", error);
+    return { error };
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//FETCH USER FINDINGS
+export const fetchUserFindings = async () => {
+  try {
+    const token = await AsyncStorage.getItem("jwtToken");
+    if (!token) {
+      console.error("No JWT token found.");
+      return { error: "No JWT token found." };
+    }
+
+    const decodedToken = jwtDecode(token);
+    const u_id = decodedToken.u_id;
+
+    const response = await axios.get(`${API_BASE_URL}/userfindings/${u_id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.status === 200) {
+      return response.data;
+    }
+  } catch (error) {
+    console.error("Error fetching user findings:", error);
     return { error };
   }
 };
