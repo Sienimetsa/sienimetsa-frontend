@@ -5,7 +5,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { API_BASE_URL } from "@env";
+import { API_PROFILE_UPDATE } from "@env";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
 import { fetchCurrentUser,fetchAllUsers } from "../Components/Fetch.js";
@@ -60,6 +60,7 @@ export default function SettingScreen({ navigation }) {
 
     if (isUsernameTaken) {
       setUsernameError("Username is already taken!");
+    
       return false;
     } else {
       setUsernameError(""); // Clear error if username is available
@@ -107,7 +108,7 @@ export default function SettingScreen({ navigation }) {
         chatColor: chatColor,
       };
       // Make API request to update the user profile
-      const response = await axios.put(`${API_BASE_URL}/api/profile/update`, payload, {
+      const response = await axios.put(`${API_PROFILE_UPDATE}`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -115,9 +116,13 @@ export default function SettingScreen({ navigation }) {
       });
 
       if (response.status === 200) {
-        Alert.alert("Profile updated successfully!");
+        setUser({
+          username,
+          profilePicture,
+          chatColor,
+        });
         setUpdateMessage("Profile updated successfully!"); // Show message
-        setTimeout(() => setUpdateMessage(""), 3000); // Clear after 3 sec
+        setTimeout(() => setUpdateMessage(""), 3000);
       }
     } catch (error) {
       console.error("Error updating profile:", error.response?.data || error.message);
@@ -153,8 +158,10 @@ export default function SettingScreen({ navigation }) {
               numColumns={3}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => selectProfilePicture(item)}>
-                  <Image source={profilePictureMap[item]} style={styles.modalImage} />
+                <TouchableOpacity
+                testID={`profile-picture-${item}`}
+                 onPress={() => selectProfilePicture(item)}>
+                  <Image source={profilePictureMap[item]} style={styles.modalImage} accessibilityRole="image" />
                 </TouchableOpacity>
               )}
             />
@@ -192,12 +199,16 @@ export default function SettingScreen({ navigation }) {
       />
 
       {/* Save Button */}
-      <Button title="Save Changes" onPress={updateProfile} color="#007BFF" />
-      <Button title="Delete Account" onPress={handleDelete} color="red" />
+      <Button  testID="SaveChanges" title="Save Changes" onPress={updateProfile} color="#007BFF" />
+      <Button  testID="DeleteAccount" title="Delete Account" onPress={handleDelete} color="red" />
       {updateMessage ? <Text style={styles.successMessage}>{updateMessage}</Text> : null}
 
      {/* Show Username Error Message */}
-    {usernameError ? (<Text style={usernameError === "Username is already taken!" ? styles.errorMessage : null}>{usernameError}</Text>) : null}
+     {usernameError ? (<Text style={styles.errorMessage}>{usernameError}</Text>) : null}
+
+            
+
+
     </View>
   );
 }
