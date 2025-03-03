@@ -1,6 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '@env';
+import { API_MOBILE_LOGIN,API_MOBILE_SIGNUP } from '@env';
 import { jwtDecode } from "jwt-decode";
 
 
@@ -8,7 +8,7 @@ import { jwtDecode } from "jwt-decode";
 const login = async (email, password) => {
   try {
      // Make a POST request to the login endpoint with email and password
-    const response = await axios.post(`${API_BASE_URL}/mobile/login`, { email, password });
+    const response = await axios.post(`${API_MOBILE_LOGIN}`, { email, password });
 
      // If the response contains a token, store it in AsyncStorage
     if (response.data.token) {
@@ -34,7 +34,7 @@ const login = async (email, password) => {
 const signup = async (username, password, phone, email, country, chatColor, profilePicture ) => {
   try {
      // Make a POST request to the signup endpoint with the user data
-    const response = await axios.post(`${API_BASE_URL}/mobile/signup`, {
+    const response = await axios.post(`${API_MOBILE_SIGNUP}`, {
       username,
       password,
       phone,
@@ -72,7 +72,7 @@ const deleteUserAccount = async (email) => {
       return { success: false, message: "Missing user ID" };
     }
     // Make a DELETE request to the delete user endpoint, passing the email and authorization token
-    const response = await axios.delete(`${API_BASE_URL}/api/profile/delete/${email}`, {
+    const response = await axios.delete(`${API_PROFILE_DELETE}/${email}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

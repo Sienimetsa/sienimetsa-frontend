@@ -5,7 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import AuthService from "./AuthService";
 import axios from 'axios';
 import { Alert } from 'react-native';
-import { API_BASE_URL } from "@env";  
+import {API_PROFILE_DELETE } from "@env";  
 
 // Creates a context to hold global state for user data, login/logout functions, etc.)
 export const AuthContext = createContext(); //  'AuthContext' is the object that holds the authentication state
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
   
-      const response = await axios.delete(`${API_BASE_URL}/api/profile/delete`, {
+      const response = await axios.delete(`${API_PROFILE_DELETE}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

@@ -2,7 +2,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { API_BASE_URL } from "@env";
+import { API_ALLMUSHROOMS,API_PROFILE,API_APPUSERS,API_USERFINDINGS } from "@env";
 import { jwtDecode } from "jwt-decode";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@ export const fetchMushroomsData = async () => {
       return { error: "No JWT token found." };
     }
 
-    const response = await axios.get(`${API_BASE_URL}/allmushrooms`, {
+    const response = await axios.get(`${API_ALLMUSHROOMS}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -43,7 +43,7 @@ export const fetchCurrentUser = async (setUser) => {
       return { error: "No JWT token found." };
     }
 
-    const response = await axios.get(`${API_BASE_URL}/api/profile`, {
+    const response = await axios.get(`${API_PROFILE}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -68,7 +68,7 @@ export const fetchAllUsers = async () => {
       console.error("No JWT token found.");
       return { error: "No JWT token found." };
     }
-    const response = await axios.get(`${API_BASE_URL}/api/appusers`, {
+    const response = await axios.get(`${API_APPUSERS}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (response.status === 200) {
@@ -94,7 +94,7 @@ export const fetchUserFindings = async () => {
     const decodedToken = jwtDecode(token);
     const u_id = decodedToken.u_id;
 
-    const response = await axios.get(`${API_BASE_URL}/userfindings/${u_id}`, {
+    const response = await axios.get(`${API_USERFINDINGS}/${u_id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (response.status === 200) {
