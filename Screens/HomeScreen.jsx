@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from "react";
-import { View, Text, StyleSheet, Button, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Button, TouchableOpacity, Modal, Image } from "react-native";
 import { AuthContext } from "../Service/AuthContext";
 import { useNavigation } from '@react-navigation/native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
@@ -9,8 +9,11 @@ export default function HomeScreen() {
 
   const { user, loading } = useContext(AuthContext);
   const navigation = useNavigation();
-  const [facing, setFacing] = useState('back');
-  const [permission, requestPermission] = useCameraPermissions();
+  const [facing, setFacing] = useState('back'); // camera facing
+  const [permission, requestPermission] = useCameraPermissions(); // camera permission
+  const cameraRef = React.useRef(null); // camera reference
+  const [photoModalVisible, setPhotoModalVisible] = useState(false); // photo modal visibility
+  const [photoUri, setPhotoUri] = useState(null); // state to store the photo uri
 
 
   // ask for camera permission on page load
@@ -53,6 +56,16 @@ export default function HomeScreen() {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   }
 
+  // function to take a photo and display it in a modal
+  const takePhoto = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync();
+      setPhotoUri(photo.uri);
+      setPhotoModalVisible(true);
+      console.debug(photo)
+    }
+  };
+
 
   return (
     <View style={styles.container}>
@@ -68,13 +81,28 @@ export default function HomeScreen() {
       />
 
       {/* CAMERA VIEW BLOCK */}
-      <CameraView style={styles.camera} facing={facing}>
+      <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
         <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={takePhoto}>
+            <Text style={styles.text}>Snap Photo</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
             <Text style={styles.text}>Flip Camera</Text>
           </TouchableOpacity>
         </View>
       </CameraView>
+
+      {/* PHOTO MODAL */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={photoModalVisible}
+        onRequestClose={() => setPhotoModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <Image source={{ uri: photoUri }} style={styles.photo} />
+          <Button title="Close" onPress={() => setPhotoModalVisible(false)} />
+        </View>
+      </Modal>
 
     </View>
   );
@@ -105,6 +133,10 @@ const styles = StyleSheet.create({
     margin: 64,
   },
   button: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    margin: 20,
+    padding: 20,
+    borderRadius: 10,
     flex: 1,
     alignSelf: 'flex-end',
     alignItems: 'center',
@@ -113,5 +145,16 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  photo: {
+    width: 300,
+    height: 400,
+    marginBottom: 20,
   },
 });
