@@ -6,6 +6,7 @@ import ChatScreen from './Screens/ChatScreen';
 import HomeScreen from './Screens/HomeScreen';
 import LibraryScreen from './Screens/LibraryScreen';
 import { AuthContext } from './Service/AuthContext';
+import LibraryStackNavigator from './LibraryStackNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -45,7 +46,7 @@ export default function BottomTabNavigator({ navigation }) {
           ),
         }} 
       />
-      <Tab.Screen name="Library" component={LibraryScreen} />
+      <Tab.Screen name="Library" component={LibraryStackNavigator} />
     </Tab.Navigator>
   );
 }

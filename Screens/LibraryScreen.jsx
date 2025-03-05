@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { fetchMushroomsData, fetchUserFindings } from '../Components/Fetch';
 import { Modal } from 'react-native-web';
 
-export default function LibraryScreen() {
+export default function LibraryScreen({ navigation }) {
   const [mushroomData, setMushroomData] = useState([]);
   const [findingsData, setFindingsData] = useState([]);
   const [findingIds, setFindingIds] = useState([]);
@@ -76,6 +76,21 @@ export default function LibraryScreen() {
                 <Text>Gills: {selectedMushroom.gills}</Text>
                 <Text>Cap: {selectedMushroom.cap}</Text>
                 <Text>Taste: {selectedMushroom.taste}</Text>
+                
+                {findingIds.includes(selectedMushroom.m_id) && (
+            <TouchableOpacity
+              style={styles.findingsButton}
+              onPress={() => {
+                setModalVisible(false);
+                navigation.navigate('FindingsScreen', {
+                  mushroomId: selectedMushroom.m_id,
+                  mushroomName: selectedMushroom.mname,
+                });
+              }}>
+              <Text style={styles.findingsButtonText}>View Findings →</Text>
+            </TouchableOpacity>
+          )}
+
                 <Button title="Close" onPress={() => setModalVisible(false)} />
               </View>
             </TouchableWithoutFeedback>
@@ -145,4 +160,14 @@ const styles = StyleSheet.create({
     margin: 10,
     borderRadius: 40,
   },
+  findingsButton:{
+    margin: 10,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#4CAF50',
+  },
+  findingsButtonText:{
+    color: '#fff',
+  
+  }
 })
