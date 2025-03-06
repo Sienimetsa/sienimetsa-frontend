@@ -1,5 +1,5 @@
-import React, { useState,useContext } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { AuthContext } from '../Service/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
@@ -16,43 +16,45 @@ const LoginScreen = ({ navigation }) => {
       setErrorMessage('Login failed. Please check your credentials.');
     }
   };
-  
+
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Login</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <Text style={styles.heading}>Login</Text>
 
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Email"
-        style={styles.input}
-        keyboardType="email-address"
-      />
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          style={styles.input}
+          keyboardType="email-address"
+        />
 
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        style={styles.input}
-        secureTextEntry
-      />
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Password"
+          style={styles.input}
+          secureTextEntry
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}
-      testID="login-button">
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Don't have an account? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Signup')}
-        testID="SignUp-button">
-          <Text style={styles.signupLink}>Sign Up</Text>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}
+          testID="login-button">
+          <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
+
+        {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Signup')}
+            testID="SignUp-button">
+            <Text style={styles.signupLink}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
