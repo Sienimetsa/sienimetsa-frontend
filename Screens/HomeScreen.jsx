@@ -1,9 +1,11 @@
-import React, { useContext, useEffect } from "react";
-import { View, Text, StyleSheet, Button, TouchableOpacity, Modal, Image } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import { View, Text, StyleSheet, Button, TouchableOpacity, Modal, Image, Alert } from "react-native";
 import { AuthContext } from "../Service/AuthContext";
 import { useNavigation } from '@react-navigation/native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
+import { API_BUCKET_UPLOAD } from "@env";
+import axios from "axios"; 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function HomeScreen() {
 
@@ -14,7 +16,9 @@ export default function HomeScreen() {
   const cameraRef = React.useRef(null); // camera reference
   const [photoModalVisible, setPhotoModalVisible] = useState(false); // photo modal visibility
   const [photoUri, setPhotoUri] = useState(null); // state to store the photo uri
-
+  const [image, setImage] = useState(null); // state to store image for upload
+  const [errorMessage, setErrorMessage] = useState(""); // upload error message
+  const [successMessage, setSuccessMessage] = useState(""); //  upload success message
 
   // ask for camera permission on page load
   useEffect(() => {
@@ -60,19 +64,85 @@ export default function HomeScreen() {
   const takePhoto = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync();
-      setPhotoUri(photo.uri);
+      setPhotoUri(photo.uri); // Store the photo URI
+      setImage(photo); // Store the photo for upload
       setPhotoModalVisible(true);
       console.debug(photo)
     }
   };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  // function to upload the image to backend
+  const uploadToBackend = async () => {
+    try {
+      const token = await AsyncStorage.getItem("jwtToken");
+      if (!token) {
+        Alert.alert("Error", "No token found. Please log in again.");
+        navigation.navigate("Login");
+        return;
+      }
+  
+      if (!image) {
+        setErrorMessage("Please take a photo to upload.");
+        return;
+      }
+  
+      // Extract the base64 string from the URI
+      const base64Image = image.base64;
+  
+      if (!base64Image) {
+        setErrorMessage("No base64 image data found.");
+        return;
+      }
+  
+      // Convert base64 to a Blob
+      const byteCharacters = atob(base64Image.split(',')[1]);
+      const byteArrays = [];
+      for (let offset = 0; offset < byteCharacters.length; offset++) {
+        byteArrays.push(byteCharacters.charCodeAt(offset));
+      }
+      const byteArray = new Uint8Array(byteArrays);
+      
+      const blob = new Blob([byteArray], { type: "image/jpg" });
+  
+      // Create a file-like object
+      const file = new File([blob], "image.jpg", { type: "image/jpg" });
+  
+      // Log the file to ensure it's correctly formatted
+      console.log("File object to be uploaded:", file);
+  
+      // Prepare the FormData with the file
+      const formData = new FormData();
+      formData.append("file", file);
+  
+  
+      // Send the request to the backend
+      const response = await axios.post(API_BUCKET_UPLOAD, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+  
+      if (response.status === 200) {
+        setSuccessMessage("Image uploaded successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setErrorMessage("Failed to upload image.");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error.response?.data || error.message);
+      setErrorMessage("An error occurred while uploading the image.");
+    }
+  };
+  
+  
   return (
     <View style={styles.container}>
 
       {/* WELCOME MESSAGE BLOCK */}
       <Text style={styles.welcomeText}>Welcome, {user ? user.email : "Loading"}!</Text>
-
 
       {/* SETTINGS BUTTON BLOCK */}
       <Button
@@ -99,11 +169,20 @@ export default function HomeScreen() {
         visible={photoModalVisible}
         onRequestClose={() => setPhotoModalVisible(false)}>
         <View style={styles.modalContainer}>
+
+        <Text style={styles.uploadText}>Do you want to upload this photo?</Text>
           <Image source={{ uri: photoUri }} style={styles.photo} />
-          <Button title="Close" onPress={() => setPhotoModalVisible(false)} />
+          <View style={styles.buttonRow}>
+            <Button title="Yes, Upload" onPress={uploadToBackend} />
+            <Button title="Close" onPress={() => setPhotoModalVisible(false)} />
+          </View>
+        {/* SUCCESS & ERROR MESSAGES */}
+       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+       {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
         </View>
       </Modal>
 
+      
     </View>
   );
 }
@@ -156,5 +235,26 @@ const styles = StyleSheet.create({
     width: 300,
     height: 400,
     marginBottom: 20,
+  },
+  uploadText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#fff',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '80%',
+  },
+  successText:{
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'rgb(60, 212, 10)',
+  },
+  errorText:{
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'red',
   },
 });
