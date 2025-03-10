@@ -26,7 +26,8 @@
     "react-native-safe-area-context": "^4.14.1",
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
-    "sienimetsa-frontend": "file:"
+    "sienimetsa-frontend": "file:",
+    "expo-image-manipulator": "~13.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.26.8",
