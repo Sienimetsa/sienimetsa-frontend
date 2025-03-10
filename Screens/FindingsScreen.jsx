@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, Image} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { fetchUserFindings } from '../Components/Fetch';
 
 export default function FindingsScreen({ route, navigation }) {
@@ -8,8 +8,7 @@ export default function FindingsScreen({ route, navigation }) {
     const [selectedFinding, setSelectedFinding] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
 
-
-// Fetch findings data for the selected mushroom
+    // Fetch findings data for the selected mushroom
     useEffect(() => {
         const fetchFindingsData = async () => {
             const result = await fetchUserFindings();
@@ -38,14 +37,13 @@ export default function FindingsScreen({ route, navigation }) {
         setModalVisible(false);
     };
 
-
-    // Template image for mushrooms, needs to be adjusted again when mushroom picture are available
+    // Render each item with a fixed color block instead of an image
     const renderItem = ({ item }) => (
         <TouchableOpacity style={styles.thumbnailContainer} onPress={() => openModal(item)}>
-            <Image
-                source={{ uri: "https://placehold.co/400" }} // Placeholder image
-                style={styles.thumbnail}
-            />
+            <View style={[styles.thumbnail, { backgroundColor: '#CDBB23' }]}>
+                {/* If you want to display an ID or other text, wrap it in a <Text> component */}
+                <Text>{item?.f_id}</Text>
+            </View>
         </TouchableOpacity>
     );
 
@@ -55,10 +53,12 @@ export default function FindingsScreen({ route, navigation }) {
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                 <Text style={styles.backButtonText}>←</Text>
             </TouchableOpacity>
-            <Text style={styles.header1}>Findings</Text>
-            <Text style={styles.header2}> {mushroomName}</Text>
 
-            {/* Grid of found mushroom */}
+            {/* Header Texts */}
+            <Text style={styles.header1}>Findings</Text>
+            <Text style={styles.header2}>{String(mushroomName) || 'No Mushroom Name Available'}</Text>
+
+            {/* Grid of found mushrooms */}
             {findingsData.length > 0 ? (
                 <FlatList
                     data={findingsData}
@@ -77,13 +77,10 @@ export default function FindingsScreen({ route, navigation }) {
                     <View style={styles.modalContent}>
                         {selectedFinding && (
                             <>
-                                <Image
-                                    source={{ uri: "https://placehold.co/400" }}
-                                    style={styles.modalImage}
-                                />
-                                <Text style={styles.modalText}>Found on: {selectedFinding.f_time}</Text>
-                                <Text style={styles.modalText}>City: {selectedFinding.city}</Text>
-                                <Text style={styles.modalText}>Notes: {selectedFinding.notes}</Text>
+                                <View style={[styles.modalImage, { backgroundColor: '#CDBB23' }]} />
+                                <Text style={styles.modalText}>Found on: {selectedFinding.f_time || 'N/A'}</Text>
+                                <Text style={styles.modalText}>City: {selectedFinding.city || 'Unknown'}</Text>
+                                <Text style={styles.modalText}>Notes: {selectedFinding.notes || 'No notes available'}</Text>
                             </>
                         )}
                         <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
@@ -157,24 +154,21 @@ const styles = StyleSheet.create({
         height: 200,
         marginBottom: 10,
         alignSelf: 'center', 
+        borderRadius: 10,
       },
       modalText: {
-        fontSize: 16,
-        marginBottom: 5,
-        textAlign: 'left', 
-        width: '100%',  
-        alignSelf: 'flex-start', 
+        fontSize: 18,
+        marginBottom: 10,
+        textAlign: 'center',
       },
       closeButton: {
         marginTop: 10,
+        backgroundColor: '#CDBB23',
         padding: 10,
-        backgroundColor: '#d9534f',
         borderRadius: 5,
       },
       closeButtonText: {
+        fontSize: 18,
         color: '#fff',
-        fontWeight: 'bold',
       },
-  });
-  
-
+});

@@ -1,7 +1,7 @@
 import { Button, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { fetchMushroomsData, fetchUserFindings } from '../Components/Fetch';
-import { Modal } from 'react-native-web';
+import { Modal } from 'react-native';
 
 export default function LibraryScreen({ navigation }) {
   const [mushroomData, setMushroomData] = useState([]);

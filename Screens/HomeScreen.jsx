@@ -6,6 +6,7 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { API_BUCKET_UPLOAD } from "@env";
 import axios from "axios"; 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImageManipulator from "expo-image-manipulator";
 
 export default function HomeScreen() {
 
@@ -63,13 +64,21 @@ export default function HomeScreen() {
   // function to take a photo and display it in a modal
   const takePhoto = async () => {
     if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync();
-      setPhotoUri(photo.uri); // Store the photo URI
-      setImage(photo); // Store the photo for upload
+      const photo = await cameraRef.current.takePictureAsync({ base64: true }); // Request base64
+      // Resize image to reduce file size
+      const resizedImage = await ImageManipulator.manipulateAsync(
+        photo.uri,
+        [{ resize: { width: 800 } }], // Reduce width to 800px (adjust as needed)
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // Reduce quality to 70%
+      );
+  
+      setPhotoUri(resizedImage.uri);
+      setImage(resizedImage);  // Use resized image for upload
       setPhotoModalVisible(true);
-      console.debug(photo)
+      console.debug(photo);
     }
   };
+  
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,49 +92,33 @@ export default function HomeScreen() {
         return;
       }
   
-      if (!image) {
+      if (!image || !image.uri) {
         setErrorMessage("Please take a photo to upload.");
         return;
       }
   
-      // Extract the base64 string from the URI
-      const base64Image = image.base64;
-  
-      if (!base64Image) {
-        setErrorMessage("No base64 image data found.");
-        return;
-      }
-  
-      // Convert base64 to a Blob
-      const byteCharacters = atob(base64Image.split(',')[1]);
-      const byteArrays = [];
-      for (let offset = 0; offset < byteCharacters.length; offset++) {
-        byteArrays.push(byteCharacters.charCodeAt(offset));
-      }
-      const byteArray = new Uint8Array(byteArrays);
-      
-      const blob = new Blob([byteArray], { type: "image/jpg" });
-  
-      // Create a file-like object
-      const file = new File([blob], "image.jpg", { type: "image/jpg" });
-  
-      // Log the file to ensure it's correctly formatted
-      console.log("File object to be uploaded:", file);
-  
-      // Prepare the FormData with the file
+      // Prepare FormData with correct formatting
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", {
+        uri: image.uri,  // Use file URI
+        name: "photo.jpg",
+        type: "image/jpeg",
+      });
   
+      console.log("Uploading file:", formData);
   
-      // Send the request to the backend
-      const response = await axios.post(API_BUCKET_UPLOAD, formData, {
+      // Send request to backend
+      const uploadResponse = await axios.post(API_BUCKET_UPLOAD, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
+        transformRequest: (data, headers) => {
+          return data; // Fix for Axios to handle FormData correctly
+        },
       });
   
-      if (response.status === 200) {
+      if (uploadResponse.status === 200) {
         setSuccessMessage("Image uploaded successfully!");
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
@@ -136,6 +129,10 @@ export default function HomeScreen() {
       setErrorMessage("An error occurred while uploading the image.");
     }
   };
+  
+  
+  
+
   
   
   return (
