@@ -2,7 +2,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { API_ALLMUSHROOMS,API_PROFILE,API_APPUSERS,API_USERFINDINGS } from "@env";
+import { API_ALLMUSHROOMS,API_PROFILE,API_APPUSERS,API_USERFINDINGS,API_DELETEFINDING } from "@env";
 import { jwtDecode } from "jwt-decode";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,5 +103,31 @@ export const fetchUserFindings = async () => {
   } catch (error) {
     console.error("Error fetching user findings:", error);
     return { error };
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//DELETE USER FINDING
+export const deleteFinding = async (findingId) => {
+  try {
+    const token = await AsyncStorage.getItem("jwtToken");
+    if (!token) {
+      console.error("No JWT token found.");
+      return { error: "No JWT token found." };
+    }
+
+    const response = await axios.delete(`${API_DELETEFINDING}/${findingId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    
+    if (response.status === 204) {
+      return { success: true };
+    } else {
+      return { error: "Failed to delete finding" };
+    }
+  } catch (error) {
+    console.error("Error deleting finding:", error);
+    return { error: error.message };
   }
 };
