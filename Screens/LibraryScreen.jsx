@@ -2,6 +2,7 @@ import { Button, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutF
 import React, { useEffect, useState } from 'react'
 import { fetchMushroomsData, fetchUserFindings } from '../Components/Fetch';
 import { Modal } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function LibraryScreen({ navigation }) {
   const [mushroomData, setMushroomData] = useState([]);
@@ -26,23 +27,25 @@ export default function LibraryScreen({ navigation }) {
     fetchAllMushroomData();
   }, []);
 
-  // Call fetchFindingsData function and set findingIds
-  useEffect(() => {
-    const fetchFindingsData = async () => {
-      const result = await fetchUserFindings();
-      if (!result.error) {
-        setFindingsData(result);
-        const findingIds = result.map(finding => finding.mushroom.m_id);
-        setFindingIds(findingIds);
-      } else {
-        if (result.error === "No JWT token found.") {
-          navigation.navigate("Login");
+  // Call fetchFindingsData function and set findingIds (useFocusEffect to update foundStatus in case of deleted findings)
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchFindingsData = async () => {
+        const result = await fetchUserFindings();
+        if (!result.error) {
+          setFindingsData(result);
+          const findingIds = result.map(finding => finding.mushroom.m_id);
+          setFindingIds(findingIds);
+        } else {
+          if (result.error === "No JWT token found.") {
+            navigation.navigate("Login");
+          }
         }
-      }
-    };
+      };
 
-    fetchFindingsData();
-  }, [mushroomData]);
+      fetchFindingsData();
+    }, [])
+  );
 
   // Open mushroom detail modal and pass item data
   const openMushroomDetailModal = (item) => {
@@ -76,20 +79,20 @@ export default function LibraryScreen({ navigation }) {
                 <Text>Gills: {selectedMushroom.gills}</Text>
                 <Text>Cap: {selectedMushroom.cap}</Text>
                 <Text>Taste: {selectedMushroom.taste}</Text>
-                
+
                 {findingIds.includes(selectedMushroom.m_id) && (
-            <TouchableOpacity
-              style={styles.findingsButton}
-              onPress={() => {
-                setModalVisible(false);
-                navigation.navigate('FindingsScreen', {
-                  mushroomId: selectedMushroom.m_id,
-                  mushroomName: selectedMushroom.mname,
-                });
-              }}>
-              <Text style={styles.findingsButtonText}>View Findings →</Text>
-            </TouchableOpacity>
-          )}
+                  <TouchableOpacity
+                    style={styles.findingsButton}
+                    onPress={() => {
+                      setModalVisible(false);
+                      navigation.navigate('FindingsScreen', {
+                        mushroomId: selectedMushroom.m_id,
+                        mushroomName: selectedMushroom.mname,
+                      });
+                    }}>
+                    <Text style={styles.findingsButtonText}>View Findings →</Text>
+                  </TouchableOpacity>
+                )}
 
                 <Button title="Close" onPress={() => setModalVisible(false)} />
               </View>
@@ -160,14 +163,14 @@ const styles = StyleSheet.create({
     margin: 10,
     borderRadius: 40,
   },
-  findingsButton:{
+  findingsButton: {
     margin: 10,
     padding: 10,
     borderRadius: 5,
     backgroundColor: '#4CAF50',
   },
-  findingsButtonText:{
+  findingsButtonText: {
     color: '#fff',
-  
+
   }
 })
