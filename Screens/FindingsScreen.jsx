@@ -1,174 +1,222 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { fetchUserFindings } from '../Components/Fetch';
+import { deleteFinding, fetchUserFindings } from '../Components/Fetch';
 
 export default function FindingsScreen({ route, navigation }) {
-    const { mushroomId, mushroomName } = route.params;
-    const [findingsData, setFindingsData] = useState([]);
-    const [selectedFinding, setSelectedFinding] = useState(null);
-    const [modalVisible, setModalVisible] = useState(false);
+  const { mushroomId, mushroomName } = route.params;
+  const [findingsData, setFindingsData] = useState([]);
+  const [selectedFinding, setSelectedFinding] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-    // Fetch findings data for the selected mushroom
-    useEffect(() => {
-        const fetchFindingsData = async () => {
-            const result = await fetchUserFindings();
-            console.log("API Response:", result);
+  // Fetch findings data for the selected mushroom
+  useEffect(() => {
+    const fetchFindingsData = async () => {
+      const result = await fetchUserFindings();
+      console.log("API Response:", result);
 
-            if (!result.error) {
-                const filteredFindings = result.filter(
-                    (finding) => finding?.mushroom?.m_id === mushroomId
-                );
-                setFindingsData(filteredFindings);
-            } else if (result.error === "No JWT token found.") {
-                navigation.navigate("Login");
-            }
-        };
-
-        fetchFindingsData();
-    }, [mushroomId, navigation]);
-
-    const openModal = (finding) => {
-        setSelectedFinding(finding);
-        setModalVisible(true);
+      if (!result.error) {
+        const filteredFindings = result.filter(
+          (finding) => finding?.mushroom?.m_id === mushroomId
+        );
+        setFindingsData(filteredFindings);
+      } else if (result.error === "No JWT token found.") {
+        navigation.navigate("Login");
+      }
     };
 
-    const closeModal = () => {
-        setSelectedFinding(null);
-        setModalVisible(false);
-    };
+    fetchFindingsData();
+  }, [mushroomId, navigation]);
 
-    // Render each item with a fixed color block instead of an image
-    const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.thumbnailContainer} onPress={() => openModal(item)}>
-            <View style={[styles.thumbnail, { backgroundColor: '#CDBB23' }]}>
-                {/* If you want to display an ID or other text, wrap it in a <Text> component */}
-                <Text>{item?.f_id}</Text>
-            </View>
-        </TouchableOpacity>
-    );
+  const openModal = (finding) => {
+    setSelectedFinding(finding);
+    setModalVisible(true);
+  };
 
-    return (
-        <View style={styles.container}>
-            {/* Back Arrow Button */}
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Text style={styles.backButtonText}>←</Text>
-            </TouchableOpacity>
+  const closeModal = () => {
+    setSelectedFinding(null);
+    setModalVisible(false);
+  };
 
-            {/* Header Texts */}
-            <Text style={styles.header1}>Findings</Text>
-            <Text style={styles.header2}>{String(mushroomName) || 'No Mushroom Name Available'}</Text>
+  // Call deleteFinding and update state
+  const handleDeleteFinding = async () => {
 
-            {/* Grid of found mushrooms */}
-            {findingsData.length > 0 ? (
-                <FlatList
-                    data={findingsData}
-                    renderItem={renderItem}
-                    keyExtractor={(item, index) => (item?.f_id ? item.f_id.toString() : index.toString())}
-                    numColumns={3} // Grid layout
-                    columnWrapperStyle={styles.row}
-                />
-            ) : (
-                <Text>No findings available for this mushroom.</Text>
+    if (!selectedFinding || !selectedFinding.f_Id) {
+      console.error("missing id or selectedFinding");
+      alert("Error deleting finding. Please try again.");
+      return;
+    }
+
+    try {
+      console.log("Attempting to delete finding with ID:", selectedFinding.f_Id);
+      const result = await deleteFinding(selectedFinding.f_Id);
+
+      if (result.success) {
+        setFindingsData(findingsData.filter(finding => finding.f_Id !== selectedFinding.f_Id));
+        closeModal();
+        alert("Finding deleted successfully");
+      } else {
+        console.error("Failed to delete finding:", result.error);
+        alert("Failed to delete finding. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting finding:", error);
+      alert("Error occurred while deleting finding.");
+    }
+  };
+
+  // Render each item with a fixed color block instead of an image
+  const renderItem = ({ item }) => (
+    <TouchableOpacity style={styles.thumbnailContainer} onPress={() => openModal(item)}>
+      <View style={[styles.thumbnail, { backgroundColor: '#CDBB23' }]}>
+        {/* If you want to display an ID or other text, wrap it in a <Text> component */}
+        <Text>{item?.f_id}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={styles.container}>
+      {/* Back Arrow Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
+
+      {/* Header Texts */}
+      <Text style={styles.header1}>Findings</Text>
+      <Text style={styles.header2}>{String(mushroomName) || 'No Mushroom Name Available'}</Text>
+
+      <View style={styles.gridContainer}>
+        {/* Grid of found mushrooms */}
+        {findingsData.length > 0 ? (
+          <FlatList
+            data={findingsData}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => (item?.f_id ? item.f_id.toString() : index.toString())}
+            numColumns={3} // Grid layout
+            columnWrapperStyle={styles.row}
+          />
+        ) : (
+          <Text>No findings available for this mushroom.</Text>
+        )}
+      </View>
+
+      {/* Modal for showing details of found mushroom */}
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {selectedFinding && (
+              <>
+                <View style={[styles.modalImage, { backgroundColor: '#CDBB23' }]} />
+                <Text style={styles.modalText}>Found on: {selectedFinding.f_time || 'N/A'}</Text>
+                <Text style={styles.modalText}>City: {selectedFinding.city || 'Unknown'}</Text>
+                <Text style={styles.modalText}>Notes: {selectedFinding.notes || 'No notes available'}</Text>
+              </>
             )}
-
-            {/* Modal for showing details of found mushroom */}
-            <Modal visible={modalVisible} transparent animationType="fade">
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        {selectedFinding && (
-                            <>
-                                <View style={[styles.modalImage, { backgroundColor: '#CDBB23' }]} />
-                                <Text style={styles.modalText}>Found on: {selectedFinding.f_time || 'N/A'}</Text>
-                                <Text style={styles.modalText}>City: {selectedFinding.city || 'Unknown'}</Text>
-                                <Text style={styles.modalText}>Notes: {selectedFinding.notes || 'No notes available'}</Text>
-                            </>
-                        )}
-                        <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-                            <Text style={styles.closeButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+            <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDeleteFinding} style={styles.deleteButton}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-    );
+      </Modal>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 20,
-      backgroundColor: '#fff',
-    },
-    backButton: {
-      position: 'absolute',
-      left: 20,
-      zIndex: 10,
-    },
-    backButtonText: {
-      fontSize: 30,
-      fontWeight: 'bold',
-      color: '#333',
-    },
-    header1: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginBottom: 5,
-      textAlign: 'center',
-    },
-    header2: {
-        fontSize: 20,
-        marginBottom: 15,
-        textAlign: 'center',
-      },
-    row: {
-      flexDirection: 'row',
-      justifyContent: 'space-between', 
-      alignItems: 'flex-start', 
-    },
-    thumbnailContainer: {
-      margin: 5,
-      alignItems: 'center',
-      width: 100, 
-    },
-    thumbnail: {
-      width: 100,
-      height: 100,
-      borderRadius: 10,
-    },
-    modalContainer: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
-      modalContent: {
-        backgroundColor: '#fff',
-        padding: 20,
-        borderRadius: 10,
-        width: '80%',
-        maxWidth: 400,
-        alignItems: 'center', 
-      },
-      modalImage: {
-        width: 200,
-        height: 200,
-        marginBottom: 10,
-        alignSelf: 'center', 
-        borderRadius: 10,
-      },
-      modalText: {
-        fontSize: 18,
-        marginBottom: 10,
-        textAlign: 'center',
-      },
-      closeButton: {
-        marginTop: 10,
-        backgroundColor: '#CDBB23',
-        padding: 10,
-        borderRadius: 5,
-      },
-      closeButtonText: {
-        fontSize: 18,
-        color: '#fff',
-      },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    zIndex: 10,
+  },
+  backButtonText: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  header1: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  header2: {
+    fontSize: 20,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  thumbnailContainer: {
+    margin: 5,
+    alignItems: 'center',
+    maxWidth: 100,
+  },
+  thumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 10,
+    alignSelf: 'center',
+    borderRadius: 10,
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  closeButton: {
+    marginTop: 10,
+    backgroundColor: '#CDBB23',
+    padding: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: '#fff',
+  },
+  deleteButton: {
+    marginTop: 10,
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    fontSize: 18,
+    color: '#fff',
+  },
+  gridContainer: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
