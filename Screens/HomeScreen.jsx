@@ -170,8 +170,15 @@ export default function HomeScreen() {
         <Text style={styles.uploadText}>Do you want to upload this photo?</Text>
           <Image source={{ uri: photoUri }} style={styles.photo} />
           <View style={styles.buttonRow}>
-            <Button title="Yes, Upload" onPress={uploadToBackend} />
-            <Button title="Close" onPress={() => setPhotoModalVisible(false)} />
+
+          <TouchableOpacity style={styles.uploadButton} onPress={uploadToBackend}>
+            <Text style={styles.text}>Yes, Upload</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.closeButton} onPress={() => setPhotoModalVisible(false)}>
+            <Text style={styles.text}>Close</Text>
+          </TouchableOpacity>
+
           </View>
         {/* SUCCESS & ERROR MESSAGES */}
        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -218,7 +225,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    fontSize: 24,
+    fontSize: 13,
     fontWeight: 'bold',
     color: 'white',
   },
@@ -233,16 +240,15 @@ const styles = StyleSheet.create({
     height: 400,
     marginBottom: 20,
   },
-  uploadText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#fff',
-  },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '80%',
+  },
+  uploadText:{
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'rgb(255, 255, 255)',
   },
   successText:{
     fontSize: 18,
@@ -254,4 +260,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'red',
   },
+  uploadButton:{
+  padding:20,
+  backgroundColor:'green',
+  borderRadius:30
+  },
+ 
+  closeButton:{
+padding:20,
+backgroundColor:'red',
+borderRadius:30
+  },
+ 
 });
