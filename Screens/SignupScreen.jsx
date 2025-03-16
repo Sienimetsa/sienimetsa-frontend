@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import AuthService from '../Service/AuthService';
+import { AuthContext } from '../Service/AuthContext'; // Import AuthContext
 
 const SignupScreen = ({ navigation }) => {
+  const { signup } = useContext(AuthContext); // Access signup function from context
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -13,12 +14,12 @@ const SignupScreen = ({ navigation }) => {
 
   const handleSignup = async () => {
     try {
-      const success = await AuthService.signup(username, password, phone, email, country);
+      const success = await signup(username, password, phone, email, country);
 
       if (success) {
         setSuccessMessage('Signup successful!');
         setErrorMessage('');
-        navigation.navigate('Login'); // Navigate to the bottom tab navigator
+        navigation.navigate('Login'); // Navigate to the login screen after successful signup
       } else {
         setErrorMessage('Signup failed. Please try again.');
         setSuccessMessage('');
@@ -149,3 +150,4 @@ const styles = StyleSheet.create({
 });
 
 export default SignupScreen;
+
