@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
   View, Text, TextInput, Button, Alert, Image, TouchableOpacity,
-  StyleSheet, Modal, FlatList
+  StyleSheet, Modal, FlatList,TouchableWithoutFeedback,Keyboard
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -37,8 +37,6 @@ export default function SettingScreen({ navigation }) {
   
     fetchData();
   }, []);
-
-
 
 // Check username availability
  const checkUsernameAvailability = async () => {
@@ -114,9 +112,10 @@ export default function SettingScreen({ navigation }) {
           "Content-Type": "application/json",
         },
       });
-
+      const { email } = user;
       if (response.status === 200) {
         setUser({
+          email,
           username,
           profilePicture,
           chatColor,
@@ -139,6 +138,7 @@ export default function SettingScreen({ navigation }) {
   };
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container}>
       <Text style={styles.title}>Edit Profile</Text>
 
@@ -169,7 +169,7 @@ export default function SettingScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-
+   
       {/* Username Input */}
       <Text style={styles.label}>Username</Text>
       <TextInput
@@ -206,10 +206,8 @@ export default function SettingScreen({ navigation }) {
      {/* Show Username Error Message */}
      {usernameError ? (<Text style={styles.errorMessage}>{usernameError}</Text>) : null}
 
-            
-
-
     </View>
+    </TouchableWithoutFeedback>
   );
 }
 

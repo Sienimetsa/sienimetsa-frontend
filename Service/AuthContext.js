@@ -1,18 +1,16 @@
-
 import React, { createContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
-import AuthService from "./AuthService";
 import axios from 'axios';
 import { Alert } from 'react-native';
-import {API_PROFILE_DELETE } from "@env";  
+import { API_MOBILE_LOGIN, API_MOBILE_SIGNUP, API_PROFILE_DELETE } from "@env";
 
-// Creates a context to hold global state for user data, login/logout functions, etc.)
-export const AuthContext = createContext(); //  'AuthContext' is the object that holds the authentication state
+// Creates a context to hold global state for user data, login/logout functions, etc.
+export const AuthContext = createContext(); // 'AuthContext' holds the authentication state
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // stores user information that can be used around the app. For example: user.email and use.usernam
-  const [loading, setLoading] = useState(true); //  State to track if the app is still loading user data
+  const [user, setUser] = useState(null); // stores user information that can be used around the app
+  const [loading, setLoading] = useState(true); // Tracks if the app is still loading user data
 
   // Helper function to get token from AsyncStorage
   const getToken = async () => {
@@ -26,8 +24,7 @@ export const AuthProvider = ({ children }) => {
       // If there's a token, decode it to get the user data
       if (token) {
         const decoded = jwtDecode(token); // Decodes the token to get user data
-        setUser({ email: decoded.sub || null ,
-        });
+        setUser({ email: decoded.sub || null });
       } else {
         setUser(null);
       }
@@ -38,7 +35,60 @@ export const AuthProvider = ({ children }) => {
   }, []); // Empty array ensures this effect runs once when the component mounts
 
 
-   // DELETE: Function to delete a user's account from the backend
+  
+  // LOGIN: Function to handle user login
+  const login = async (email, password) => {
+    try {
+      // Make a POST request to the login endpoint with email and password
+      const response = await axios.post(`${API_MOBILE_LOGIN}`, { email, password });
+
+      // If the response contains a token, store it in AsyncStorage
+      if (response.data.token) {
+        await AsyncStorage.setItem("jwtToken", response.data.token);
+        console.log("Token stored in AsyncStorage:", response.data.token);
+
+        const decoded = jwtDecode(response.data.token); // Decode token
+        console.log("Decoded Token:", decoded);
+
+        const userData = { email: decoded.sub }; // Prepare user data from decoded token
+        setUser(userData); // Set user data in context
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
+    }
+  };
+
+  // SIGNUP: Function to handle user signup
+  const signup = async (username, password, phone, email, country, chatColor, profilePicture) => {
+    try {
+      // Make a POST request to the signup endpoint with the user data
+      const response = await axios.post(`${API_MOBILE_SIGNUP}`, {
+        username,
+        password,
+        phone,
+        email,
+        country,
+        chatColor,
+        profilePicture,
+      });
+
+      if (response.status === 201) {
+        console.log("Signup successful");
+        return true;
+      } else {
+        console.error("Signup failed");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error during signup:", error);
+      return false;
+    }
+  };
+
+  // DELETE ACCOUNT: Function to delete a user's account from the backend
   const deleteAccount = async () => {
     try {
       const token = await getToken(); // Get the stored token to authenticate the request
@@ -52,7 +102,7 @@ export const AuthProvider = ({ children }) => {
         Alert.alert("Error", "No email found. Cannot delete account.");
         return false;
       }
-  
+
       const response = await axios.delete(`${API_PROFILE_DELETE}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -73,24 +123,7 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  // Login function
-  const login = async (email, password) => {
-    try {
-      const userData = await AuthService.login(email, password); // Calls AuthService login function
-      console.log("User data returned from AuthService:", userData); 
-      if (userData) {
-        setUser(userData); // Set the user data in the state
-        console.log("User logged in:", userData);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Login error:", error);
-      return false;
-    }
-  };
-
-  // Logout function
+  // LOGOUT: Function to log the user out
   const logout = async () => {
     try {
       await AsyncStorage.clear();
@@ -102,10 +135,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading, deleteAccount }}>
+    <AuthContext.Provider value={{ user, setUser, login, logout, signup, loading, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-
