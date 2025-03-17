@@ -9,6 +9,7 @@ import { API_PROFILE_UPDATE } from "@env";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
 import { fetchCurrentUser,fetchAllUsers } from "../Components/Fetch.js";
+import Toast from "react-native-toast-message";
 
 export default function SettingScreen({ navigation }) {
   const { user, setUser, logout, deleteAccount } = useContext(AuthContext); // Retrieve user data and actions from AuthContext
@@ -17,8 +18,7 @@ export default function SettingScreen({ navigation }) {
   const [profilePicture, setProfilePicture] = useState("pp1");
   const [chatColor, setChatColor] = useState("#000000");
   const [modalVisible, setModalVisible] = useState(false);
-  const [updateMessage, setUpdateMessage] = useState("");
-  const [usernameError, setUsernameError] = useState(""); 
+
 
   // Fetch user data when the settings screen loads
   useEffect(() => {
@@ -38,93 +38,112 @@ export default function SettingScreen({ navigation }) {
     fetchData();
   }, []);
 
+  // Show toast message for updating/deleting account and checking username
+  const showToast = (type, message) => {
+    Toast.show({
+      type: type, // 'success' or 'error'
+      text1: message,
+      position: "bottom",
+      visibilityTime: 3000,
+      autoHide: true,
+    });
+  };
+
 // Check username availability
  const checkUsernameAvailability = async () => {
   try {
-    const usersData = await fetchAllUsers(); // Fetch all users
-
-    // Check if usersData and _embedded.appusers exist
+    const usersData = await fetchAllUsers();
     if (!usersData || !usersData._embedded || !usersData._embedded.appusers) {
       console.error("Error: Unexpected response structure", usersData);
-      setUsernameError("Error fetching users.");
+      showToast("error", "Error fetching users.");
       return false;
     }
 
-    // Filter out the current user's username
     const otherUsers = usersData._embedded.appusers.filter(appUser => appUser.username !== user.username);
-
-    // Check if the username already exists in the filtered 'appusers' array
     const isUsernameTaken = otherUsers.some(appUser => appUser.username === username);
 
     if (isUsernameTaken) {
-      setUsernameError("Username is already taken!");
-    
+      showToast("error", "Username is already taken!");
       return false;
-    } else {
-      setUsernameError(""); // Clear error if username is available
-      return true;
-    }
+    } 
+    return true;
   } catch (error) {
     console.error("Error checking username:", error);
-    setUsernameError("Error checking username.");
+    showToast("error", "Error checking username.");
     return false;
   }
 };
   
 
   // Handle account deletion
-  const handleDelete = async () => {
-    const success = await deleteAccount();
-    if (success) {
-      await logout();  // Logout after deleting the user
-      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-    } else {
-      Alert.alert("Failed to delete account.");
-    }
+  const handleDelete = () => {
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete your account? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const success = await deleteAccount();
+              if (success) {
+                showToast("success", "Account deleted successfully!");
+  
+                // Navigate after a short delay to let the toast show
+                setTimeout(async () => {
+                  await logout();
+                  navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+                }, 1000);
+              } else {
+                showToast("error", "Failed to delete account.");
+              }
+            } catch (error) {
+              console.error("Error deleting account:", error);
+              showToast("error", "An error occurred while deleting your account.");
+            }
+          },
+          style: "destructive",
+        },
+      ]
+    );
   };
-
+  
+  
+  
   // Update user profile
   const updateProfile = async () => {
-
-    const isUsernameAvailable = await checkUsernameAvailability(); // Check username availability before proceeding
-
-    if (!isUsernameAvailable) {
-      return; // If the username is not available, stop the profile update
-    }
-
+    const isUsernameAvailable = await checkUsernameAvailability();
+    if (!isUsernameAvailable) return;
+  
     try {
-      const token = await AsyncStorage.getItem("jwtToken"); // Retrieve token to authorize the update
+      const token = await AsyncStorage.getItem("jwtToken");
       if (!token) {
-        Alert.alert("Error", "No token found. Please log in again.");
+        showToast("error", "No token found. Please log in again.");
         return;
       }
-      // Prepare the payload with updated profile data
+  
       const payload = {
-        username: username,
+        username,
         password: newPassword,
-        profilePicture: profilePicture,
-        chatColor: chatColor,
+        profilePicture,
+        chatColor,
       };
-      // Make API request to update the user profile
+  
       const response = await axios.put(`${API_PROFILE_UPDATE}`, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
-      const { email } = user;
+  
       if (response.status === 200) {
-        setUser({
-          email,
-          username,
-          profilePicture,
-          chatColor,
-        });
-        setUpdateMessage("Profile updated successfully!"); // Show message
-        setTimeout(() => setUpdateMessage(""), 3000);
+        setUser({ ...user, username, profilePicture, chatColor });
+        showToast("success", "Profile updated successfully!");
       }
     } catch (error) {
       console.error("Error updating profile:", error.response?.data || error.message);
+      showToast("error", "Failed to update profile.");
     }
   };
 
@@ -137,9 +156,11 @@ export default function SettingScreen({ navigation }) {
     setModalVisible(false);
   };
 
+  
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container}>
+   
       <Text style={styles.title}>Edit Profile</Text>
 
       {/* Profile Picture Selection */}
@@ -201,10 +222,7 @@ export default function SettingScreen({ navigation }) {
       {/* Save Button */}
       <Button  testID="SaveChanges" title="Save Changes" onPress={updateProfile} color="#007BFF" />
       <Button  testID="DeleteAccount" title="Delete Account" onPress={handleDelete} color="red" />
-      {updateMessage ? <Text style={styles.successMessage}>{updateMessage}</Text> : null}
-
-     {/* Show Username Error Message */}
-     {usernameError ? (<Text style={styles.errorMessage}>{usernameError}</Text>) : null}
+      <Toast /> 
 
     </View>
     </TouchableWithoutFeedback>
