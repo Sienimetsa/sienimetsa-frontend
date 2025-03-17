@@ -113,7 +113,6 @@ export const AuthProvider = ({ children }) => {
 
       if (response.status === 200) {
         console.log("Account deleted successfully.");
-        Alert.alert("Account deleted successfully.");
         return true;
       }
     } catch (error) {
