@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { View, Text, StyleSheet, Button, TouchableOpacity, Modal, Image, TextInput, FlatList } from "react-native";
 import { AuthContext } from "../Service/AuthContext";
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from "expo-image-manipulator";
 import { fetchMushroomsData } from "../Components/Fetch";
+import Toast from "react-native-toast-message";
 
 export default function HomeScreen() {
 
@@ -16,12 +17,32 @@ export default function HomeScreen() {
   const [photoModalVisible, setPhotoModalVisible] = useState(false); // photo modal visibility
   const [photoUri, setPhotoUri] = useState(null); // state to store the photo uri
   const [image, setImage] = useState(null); // state to store image for upload
-  const [errorMessage, setErrorMessage] = useState(""); // upload error message
   const [successMessage, setSuccessMessage] = useState(""); //  upload success message
   const [mushroomId, setMushroomId] = useState(""); // mushroom
   const [AImushroomresult, setAImushroomresult] = useState("*AI result*"); // AI mushroom result
   const [mushroomList, setMushroomList] = useState([]);
   const [searchText, setSearchText] = useState("");
+  const [returnFromFinding, setReturnFromFinding] = useState(false); // return from finding screen
+
+  const showToast = (type, message) => {
+    Toast.show({
+      type: type, // 'success' or 'error'
+      text1: message,
+      position: "bottom",
+      visibilityTime: 3000,
+      autoHide: true,
+    });
+  };
+
+  // Check if we're returning from CreateFinding with preserved data
+  useFocusEffect(
+    useCallback(() => {
+      if (returnFromFinding && photoUri) {
+        setPhotoModalVisible(true);
+      }
+      return () => { };
+    }, [returnFromFinding, photoUri])
+  );
 
   // fetch all mushrooms
   useEffect(() => {
@@ -93,6 +114,7 @@ export default function HomeScreen() {
       setPhotoUri(resizedImage.uri);
       setImage(resizedImage);  // Use resized image for upload
       setPhotoModalVisible(true);
+      setReturnFromFinding(false);
       // console.debug(photo); // print photo URI to console
     }
   };
@@ -191,15 +213,19 @@ export default function HomeScreen() {
           />
 
           <View style={styles.buttonRow}>
-            <Button title="Save" onPress={() => {
+
+            {/* CREATE FINDING BUTTON */}
+            <TouchableOpacity style={styles.modalButton} onPress={() => {
 
               // Check if mushroom is selected
               if (!mushroomId) {
-                setErrorMessage("Please select a mushroom first");
+                showToast("error", "Please select a mushroom first");
                 return;
               }
 
               const selectedMushroom = mushroomList.find(m => m.m_id.toString() === mushroomId);
+
+              setReturnFromFinding(true);
 
               // navigate to CreateFinding screen and pass the photoUri, mushroomId, image and mushroomName
               navigation.navigate('CreateFinding', {
@@ -210,15 +236,23 @@ export default function HomeScreen() {
               });
 
               setPhotoModalVisible(false);
-            }} />
-            <Button title="Close" onPress={() => setPhotoModalVisible(false)} />
-          </View>
-          {/* SUCCESS & ERROR MESSAGES */}
-          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-          {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
-        </View>
-      </Modal>
+            }}>
+              <Text style={styles.modalBtnText}>Create a finding</Text>
+            </TouchableOpacity>
 
+            {/* CLOSE MODAL BUTTON */}
+            <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
+              setMushroomId("");
+              setPhotoUri(null);
+              setReturnFromFinding(false);
+              setPhotoModalVisible(false);
+            }}>
+              <Text style={styles.modalBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <Toast />
+      </Modal>
 
     </View>
   );
@@ -282,8 +316,7 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    alignItems: 'center',
     width: '80%',
   },
   successText: {
@@ -360,5 +393,24 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#4CAF50',
+  },
+  modalButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    margin: 5,
+    width: '40%',
+  },
+  modalCancelButton: {
+    backgroundColor: '#ff1453',
+    padding: 10,
+    borderRadius: 5,
+    margin: 5,
+    width: '40%',
+  },
+  modalBtnText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });

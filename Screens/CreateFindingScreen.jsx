@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, Button, Alert, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, TextInput, Button, Alert, ScrollView, Switch } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import { createNewFinding } from '../Components/Fetch';
+import * as Location from 'expo-location';
+import Toast from "react-native-toast-message";
 
 export default function CreateFindingScreen() {
   const navigation = useNavigation();
@@ -11,20 +13,61 @@ export default function CreateFindingScreen() {
   const { photoUri, mushroomId, image, mushroomName } = route.params || {};
   const [findingNotes, setFindingNotes] = useState('');
   const [findingCity, setFindingCity] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [location, setLocation] = useState(null);
+  const [locationErrorMsg, setLocationErrorMsg] = useState(null);
+  const [useCurrentLocation, setUseCurrentLocation] = useState(true);
+
+  // Show toast message function
+  const showToast = (type, message) => {
+    Toast.show({
+      type: type, // 'success' or 'error'
+      text1: message,
+      position: "bottom",
+      visibilityTime: 3000,
+      autoHide: true,
+    });
+  };
+
+  // Get current location when component mounts
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationErrorMsg('Permission to access location was denied');
+        setUseCurrentLocation(false);
+        return;
+      }
+
+      try {
+        let location = await Location.getCurrentPositionAsync({});
+        setLocation(location);
+        // Try to get city name from coordinates
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        });
+
+        if (reverseGeocode && reverseGeocode.length > 0) {
+          const address = reverseGeocode[0];
+          setFindingCity(address.city || address.region || "Unknown location");
+        }
+      } catch (error) {
+        console.error("Error getting location:", error);
+        setLocationErrorMsg('Failed to get current location');
+        setUseCurrentLocation(false);
+      }
+    })();
+  }, []);
 
   // Function to upload the image to backend
   const saveFinding = async () => {
     setIsLoading(true);
-    setErrorMessage('');
-    setSuccessMessage('');
-    
+
     try {
       const token = await AsyncStorage.getItem("jwtToken");
       if (!token) {
-        Alert.alert("Error", "No token found. Please log in again.");
+        showToast("error", "No token found. Please log in again.");
         navigation.navigate("Login");
         return;
       }
@@ -34,7 +77,7 @@ export default function CreateFindingScreen() {
 
       const mushroomIdNum = parseInt(mushroomId, 10);
       if (isNaN(mushroomIdNum)) {
-        setErrorMessage("Invalid mushroom selection.");
+        showToast("error", "Invalid mushroom selection.");
         setIsLoading(false);
         return;
       }
@@ -51,19 +94,27 @@ export default function CreateFindingScreen() {
         mushroom: { m_id: mushroomIdNum }
       };
 
+      // Add coordinates if available
+      if (useCurrentLocation && location) {
+        const lat = location.coords.latitude;
+        const lng = location.coords.longitude;
+        finding.city = `${lat}, ${lng}`;
+      }
+
+      console.log("Sending finding:", JSON.stringify(finding));
       const result = await createNewFinding(image, finding);
 
       if (result.success) {
-        setSuccessMessage("Finding saved successfully!");
+        showToast("success", "Finding saved successfully!");
         setTimeout(() => {
-            navigation.navigate('Main', { screen: 'Home' });
+          navigation.navigate('Main', { screen: 'Home' });
         }, 1500);
       } else {
-        setErrorMessage(result.error || "Failed to save finding.");
+        showToast("error", result.error || "Failed to save finding.");
       }
     } catch (error) {
       console.error("Error saving finding:", error);
-      setErrorMessage(`Save failed: ${error.message}`);
+      showToast("error", `Save failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -73,17 +124,17 @@ export default function CreateFindingScreen() {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Text style={styles.title}>Create New Finding</Text>
-        
+
         {photoUri && (
           <Image source={{ uri: photoUri }} style={styles.photo} />
         )}
-        
+
         <View style={styles.infoContainer}>
           <Text style={styles.mushroomName}>
             Selected mushroom: {mushroomName || "None selected"}
           </Text>
         </View>
-        
+
         <View style={styles.formContainer}>
           <Text style={styles.label}>Notes</Text>
           <TextInput
@@ -94,32 +145,51 @@ export default function CreateFindingScreen() {
             value={findingNotes}
             onChangeText={setFindingNotes}
           />
-          
+
           <Text style={styles.label}>Location</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="City or location name"
-            value={findingCity}
-            onChangeText={setFindingCity}
-          />
+          {locationErrorMsg ? (
+            <Text style={styles.errorText}>{locationErrorMsg}</Text>
+          ) : null}
+
+          <View style={styles.locationContainer}>
+            <View style={styles.switchContainer}>
+              <Text>Use current coordinates?</Text>
+              <Switch
+                value={useCurrentLocation}
+                onValueChange={setUseCurrentLocation}
+              />
+            </View>
+
+            {useCurrentLocation && location ? (
+              <View style={styles.locationInfo}>
+                <Text>{location.coords.latitude.toFixed(6)}, {location.coords.longitude.toFixed(6)}</Text>
+              </View>
+            ) : (
+              <TextInput
+                style={styles.input}
+                placeholder="City or location name"
+                value={findingCity}
+                onChangeText={setFindingCity}
+                editable={!useCurrentLocation}
+              />
+            )}
+          </View>
         </View>
-        
+
         <View style={styles.buttonContainer}>
-          <Button 
-            title="Cancel" 
-            onPress={() => navigation.goBack()} 
+          <Button
+            title="Cancel"
+            onPress={() => navigation.goBack()}
             color="#888"
           />
-          <Button 
-            title={isLoading ? "Saving..." : "Save Finding"} 
+          <Button
+            title={isLoading ? "Saving..." : "Save Finding"}
             onPress={saveFinding}
             disabled={isLoading}
             color="#4CAF50"
           />
         </View>
-        
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-        {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
+        <Toast />
       </View>
     </ScrollView>
   );
@@ -197,5 +267,21 @@ const styles = StyleSheet.create({
     color: '#d32f2f',
     textAlign: 'center',
     marginTop: 10,
+  },
+  locationContainer: {
+    marginBottom: 15,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  locationInfo: {
+    backgroundColor: '#e6f7ed',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#b3dbbf',
   },
 });
