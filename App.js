@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './Screens/LoginScreen';
 import SignupScreen from './Screens/SignupScreen';
 import SettingScreen from './Screens/SettingScreen';
+import CreateFindingScreen from './Screens/CreateFindingScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 import { AuthProvider } from './Service/AuthContext';
 
@@ -18,6 +19,7 @@ export default function App() {
         <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Main" component={BottomTabNavigator} options={{ headerShown: false }} />
         <Stack.Screen name="Settings" component={SettingScreen} />
+        <Stack.Screen name="CreateFinding" component={CreateFindingScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   </AuthProvider>

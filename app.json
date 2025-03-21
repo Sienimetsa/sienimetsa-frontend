@@ -6,6 +6,12 @@
         {
           "cameraPermission": "Allow Sienimetsä to access your camera"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Sienimetsä to use your location to save finding locations."
+        }
       ]
     ],
     "name": "sienimetsa-frontend",
