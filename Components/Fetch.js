@@ -2,7 +2,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { API_ALLMUSHROOMS,API_PROFILE,API_APPUSERS,API_USERFINDINGS,API_DELETEFINDING } from "@env";
+import { API_ALLMUSHROOMS,API_PROFILE,API_APPUSERS,API_USERFINDINGS,API_DELETEFINDING,API_NEWFINDING } from "@env";
 import { jwtDecode } from "jwt-decode";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,5 +129,59 @@ export const deleteFinding = async (findingId) => {
   } catch (error) {
     console.error("Error deleting finding:", error);
     return { error: error.message };
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//CREATE NEW FINDING
+export const createNewFinding = async (image, finding) => {
+  try {
+    const token = await AsyncStorage.getItem("jwtToken");
+    if (!token) {
+      return { error: "No JWT token found." };
+    }
+
+    if (!image || !image.uri) {
+      return { error: "No image available." };
+    }
+
+    // Prepare FormData
+    const formData = new FormData();
+
+    // Format the image file
+    formData.append("file", {
+      uri: image.uri,
+      type: "image/jpeg",
+      name: "photo.jpg",
+    });
+
+    // Append the finding JSON as a string
+    formData.append("finding", JSON.stringify(finding));
+
+    // Send request to backend
+    const response = await axios.post(`${API_NEWFINDING}`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+        'Accept': 'application/json'
+      },
+    });
+
+    if (response.status === 201) {
+      return { success: true, data: response.data };
+    } else {
+      return { error: "Failed to save finding." };
+    }
+  } catch (error) {
+    console.error("Error creating new finding:", error);
+    return { 
+      error: error.response?.data?.message || error.message,
+      details: {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      }
+    };
   }
 };
