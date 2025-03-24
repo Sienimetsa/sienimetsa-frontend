@@ -7,10 +7,20 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_PROFILE_UPDATE } from "@env";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
-import { AuthContext } from "../Service/AuthContext";
+import { AuthContext } from "../Service/AuthContext.js";
 import { fetchCurrentUser,fetchAllUsers } from "../Components/Fetch.js";
 import Toast from "react-native-toast-message";
 
+const COLORS = [
+  { name: "Red", hex: "#ed1a28" },
+  { name: "Blue", hex: "#3498DB" },
+  { name: "Green", hex: "#12b512" },
+  { name: "Yellow", hex: "#F1C40F" },
+  { name: "Purple", hex: "#9B59B6" },
+  { name: "Orange", hex: "#E67E22" },
+  { name: "Pink", hex: "#FF69B4" },
+  { name: "Black", hex: "#000000" },
+]; 
 export default function SettingScreen({ navigation }) {
   const { user, setUser, logout, deleteAccount } = useContext(AuthContext); // Retrieve user data and actions from AuthContext
   const [username, setUsername] = useState("");
@@ -18,6 +28,7 @@ export default function SettingScreen({ navigation }) {
   const [profilePicture, setProfilePicture] = useState("pp1");
   const [chatColor, setChatColor] = useState("#000000");
   const [modalVisible, setModalVisible] = useState(false);
+  const [colorModalVisible, setColorModalVisible] = useState(false);
 
 
   // Fetch user data when the settings screen loads
@@ -138,15 +149,32 @@ export default function SettingScreen({ navigation }) {
       });
   
       if (response.status === 200) {
-        setUser({ ...user, username, profilePicture, chatColor });
-        showToast("success", "Profile updated successfully!");
+        // First update the context state with the new profile data
+        setUser({
+          ...user,
+          username,
+          profilePicture,
+          chatColor,
+        });
+  
+        // Optionally refetch the user data to ensure everything is in sync with the backend
+        const updatedUser = await fetchCurrentUser(setUser); // This will fetch and update the user context
+        if (updatedUser) {
+          showToast("success", "Profile updated successfully!");
+        }
       }
     } catch (error) {
       console.error("Error updating profile:", error.response?.data || error.message);
       showToast("error", "Failed to update profile.");
     }
   };
+  
+  const openColorModal = () => setColorModalVisible(true);
 
+  const selectChatColor = (color) => {
+    setChatColor(color);
+    setColorModalVisible(false);
+  };
   // Open profile picture selection modal
   const openProfilePictureModal = () => setModalVisible(true);
 
@@ -190,6 +218,30 @@ export default function SettingScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+           {/* Chat Color Selection */}
+           <Text style={styles.label}>Chat Color</Text>
+        <TouchableOpacity onPress={openColorModal} style={[styles.colorPreview, { backgroundColor: chatColor }]}>
+          <Text style={styles.colorText}>Select Chat Color</Text>
+        </TouchableOpacity>
+      {/* Chat Color Modal */}
+      <Modal visible={colorModalVisible} animationType="fade" transparent={true}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Choose Chat Color</Text>
+              <FlatList
+                data={COLORS}
+                numColumns={4}
+                keyExtractor={(item) => item.hex}
+                renderItem={({ item }) => (
+                  <TouchableOpacity onPress={() => selectChatColor(item.hex)} style={[styles.colorCircle, { backgroundColor: item.hex }]}>
+                    {chatColor === item.hex && <Text style={styles.selectedColor}>✔</Text>}
+                  </TouchableOpacity>
+                )}
+              />
+              <Button title="Cancel" onPress={() => setColorModalVisible(false)} color="red" />
+            </View>
+          </View>
+        </Modal>
    
       {/* Username Input */}
       <Text style={styles.label}>Username</Text>
@@ -200,14 +252,6 @@ export default function SettingScreen({ navigation }) {
         placeholder="Enter new username"
       />
 
-      {/* Chat Color Input */}
-      <Text style={styles.label}>Chat Color</Text>
-      <TextInput
-        style={styles.input}
-        value={chatColor}
-        onChangeText={setChatColor}
-        placeholder="Enter chat color (e.g., #ff5733)"
-      />
 
       {/* Password Input */}
       <Text style={styles.label}>New Password</Text>
@@ -218,6 +262,8 @@ export default function SettingScreen({ navigation }) {
         placeholder="Enter new password"
         secureTextEntry
       />
+
+      
 
       {/* Save Button */}
       <Button  testID="SaveChanges" title="Save Changes" onPress={updateProfile} color="#007BFF" />
@@ -267,30 +313,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginTop: 5,
   },
-  errorText: {
-    color: "red",
-    fontSize: 14,
+  colorPreview: {
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 5,
     marginTop: 5,
   },
-  successMessage: {
-    color: "green",
-    fontSize: 16,
+  colorText: {
+    color: "#fff",
     fontWeight: "bold",
-    textAlign: "center",
-    marginTop: 10,
-  },
-  errorMessage: {
-    color: "red",
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginTop: 10,
   },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Dim background
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     backgroundColor: "#fff",
@@ -303,6 +341,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
+  },
+  colorCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    margin: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  selectedColor: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
   modalImage: {
     width: 60,

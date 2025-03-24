@@ -88,8 +88,8 @@ export default function HomeScreen() {
         <Button onPress={requestPermission} title="grant permission" />
         {/* SETTINGS BUTTON BLOCK */}
         <Button
-          title="Go to Settings"
-          onPress={() => navigation.navigate('Settings')}
+          title="Profile"
+          onPress={() => navigation.navigate('Profile')}
         />
       </View>
     );
@@ -133,8 +133,8 @@ export default function HomeScreen() {
 
       {/* SETTINGS BUTTON BLOCK */}
       <Button
-        title="Go to Settings"
-        onPress={() => navigation.navigate('Settings')}
+        title="Go to Profile"
+        onPress={() => navigation.navigate('Profile')}
       />
 
       {/* CAMERA VIEW BLOCK */}
