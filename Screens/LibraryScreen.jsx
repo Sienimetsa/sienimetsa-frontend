@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { fetchMushroomsData, fetchUserFindings } from '../Components/Fetch';
 import { Modal } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import mushroomPictureMap from '../Components/MushroomPictureMap';
 
 export default function LibraryScreen({ navigation }) {
   const [mushroomData, setMushroomData] = useState([]);
@@ -10,6 +11,7 @@ export default function LibraryScreen({ navigation }) {
   const [findingIds, setFindingIds] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMushroom, setSelectedMushroom] = useState({ mname: 'Information not available', toxicity_level: 'Information not available', color: 'Information not available', gills: 'Information not available', cap: 'Information not available', taste: 'Information not available' });
+
 
   // Call fetchAllMushroomData function
   useEffect(() => {
@@ -50,6 +52,8 @@ export default function LibraryScreen({ navigation }) {
   // Open mushroom detail modal and pass item data
   const openMushroomDetailModal = (item) => {
     setSelectedMushroom(item);
+    console.log("Selected mushroom:", item.mname);
+    console.log("Image available:", mushroomPictureMap[item.mname] ? "Yes" : "No");
     setModalVisible(true)
   };
 
@@ -75,11 +79,7 @@ export default function LibraryScreen({ navigation }) {
               <View style={styles.modalContent}>
                 <Image
                   source={
-                    //conditional rendering: if image is not available, show mushroom_null.png
-                    selectedMushroom.image
-                    //IMAGES IN mushroom-photos SHOULD BE NAMED LIKE SO: "Amanita-muscaria"
-                      ? { uri: `../assets/mushroom-photos/${selectedMushroom.mname.replace(/\s+/g, '-')}` } //replace ' ' with '-'
-                      : require('../assets/mushroom-photos/mushroom_null.png')
+                    mushroomPictureMap[selectedMushroom.mname] || require('../assets/mushroom-photos/mushroom_null.png')
                   }
                   style={styles.modalImage}
                 />
