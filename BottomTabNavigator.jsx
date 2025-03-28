@@ -34,8 +34,14 @@ export default function BottomTabNavigator({ navigation }) {
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: 'gray',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: 'white',
+        tabBarInactiveTintColor: 'white',
+        tabBarStyle: {
+          backgroundColor: '#574E47', // bottom tab background color
+          borderTopWidth: 0, // Removes top border
+        },
+        headerStyle: { backgroundColor: '#574E47' }, 
+        headerTintColor: 'white', // 
       })}
     >
       <Tab.Screen name="Chat" component={ChatScreen} />
