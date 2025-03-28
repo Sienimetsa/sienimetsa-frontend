@@ -1,4 +1,4 @@
-import { Button, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
+import { Button, FlatList, Image, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { fetchMushroomsData, fetchUserFindings } from '../Components/Fetch';
 import { Modal } from 'react-native';
@@ -73,6 +73,16 @@ export default function LibraryScreen({ navigation }) {
           <View style={styles.modalContainer}>
             <TouchableWithoutFeedback>
               <View style={styles.modalContent}>
+                <Image
+                  source={
+                    //conditional rendering: if image is not available, show mushroom_null.png
+                    selectedMushroom.image
+                    //IMAGES IN mushroom-photos SHOULD BE NAMED LIKE SO: "Amanita-muscaria"
+                      ? { uri: `../assets/mushroom-photos/${selectedMushroom.mname.replace(/\s+/g, '-')}` } //replace ' ' with '-'
+                      : require('../assets/mushroom-photos/mushroom_null.png')
+                  }
+                  style={styles.modalImage}
+                />
                 <Text style={styles.modalTitle}>{selectedMushroom.mname}</Text>
                 <Text>Toxicity Level: {selectedMushroom.toxicity_level}</Text>
                 <Text>Color: {selectedMushroom.color}</Text>
@@ -158,10 +168,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   modalImage: {
-    width: 80,
-    height: 80,
+    width: "50%",
+    height: undefined,
+    aspectRatio: 1,
     margin: 10,
-    borderRadius: 40,
+    resizeMode: "contain",
   },
   findingsButton: {
     margin: 10,
@@ -171,6 +182,5 @@ const styles = StyleSheet.create({
   },
   findingsButtonText: {
     color: '#fff',
-
   }
-})
+});
