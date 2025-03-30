@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, Image } from 'react-native';
 import { deleteFinding, fetchUserFindings } from '../Components/Fetch';
+import { API_BASE_URL } from '@env';
 
 export default function FindingsScreen({ route, navigation }) {
   const { mushroomId, mushroomName } = route.params;
@@ -65,14 +66,38 @@ export default function FindingsScreen({ route, navigation }) {
   };
 
   // Render each item with a fixed color block instead of an image
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.thumbnailContainer} onPress={() => openModal(item)}>
-      <View style={[styles.thumbnail, { backgroundColor: '#CDBB23' }]}>
-        {/* If you want to display an ID or other text, wrap it in a <Text> component */}
-        <Text>{item?.f_id}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }) => {
+    if (item.imageURL) {
+      const imageUrl = `${API_BASE_URL}/images/${item.imageURL}`;
+      console.log("API_BASE_URL:", API_BASE_URL);
+      console.log("Full image URL:", imageUrl);
+    }
+
+    return (
+      <TouchableOpacity style={styles.thumbnailContainer} onPress={() => openModal(item)}>
+        <View style={styles.thumbnailWrapper}>
+          {item.imageURL ? (
+            <Image
+              source={{
+                uri: `${API_BASE_URL}/images/${item.imageURL}`,
+                cache: 'reload'
+              }}
+              style={styles.thumbnail}
+              resizeMode="cover"
+              onError={(e) => console.error("Thumbnail error:", e.nativeEvent.error)}
+            />
+          ) : (
+            <Image
+              source={require("../assets/mushroom-photos/mushroom_null.png")}
+              style={styles.thumbnail}
+              resizeMode="cover"
+              onError={(e) => console.error("Thumbnail error:", e.nativeEvent.error)}
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -91,7 +116,7 @@ export default function FindingsScreen({ route, navigation }) {
           <FlatList
             data={findingsData}
             renderItem={renderItem}
-            keyExtractor={(item, index) => (item?.f_id ? item.f_id.toString() : index.toString())}
+            keyExtractor={(item, index) => (item?.f_Id ? item.f_Id.toString() : index.toString())}
             numColumns={3} // Grid layout
             columnWrapperStyle={styles.row}
           />
@@ -106,7 +131,29 @@ export default function FindingsScreen({ route, navigation }) {
           <View style={styles.modalContent}>
             {selectedFinding && (
               <>
-                <View style={[styles.modalImage, { backgroundColor: '#CDBB23' }]} />
+                {selectedFinding.imageURL ? (
+                  <>
+                    {console.log("Modal image URL:", `${API_BASE_URL}/images/${selectedFinding.imageURL}`)}
+                    <Image
+                      source={{
+                        uri: `${API_BASE_URL}/images/${selectedFinding.imageURL}`,
+                        cache: 'reload'
+                      }}
+                      style={styles.modalImage}
+                      resizeMode="cover"
+                      onError={(e) => console.error("Image loading error:", e.nativeEvent.error)}
+                      onLoadStart={() => console.log("Started loading image")}
+                      onLoad={() => console.log("Image loaded successfully!")}
+                    />
+                  </>
+                ) : (
+                  <Image
+                    source={require("../assets/mushroom-photos/mushroom_null.png")}
+                    style={styles.thumbnail}
+                    resizeMode="cover"
+                    onError={(e) => console.error("Thumbnail error:", e.nativeEvent.error)}
+                  />
+                )}
                 <Text style={styles.modalText}>Found on: {selectedFinding.f_time || 'N/A'}</Text>
                 <Text style={styles.modalText}>City: {selectedFinding.city || 'Unknown'}</Text>
                 <Text style={styles.modalText}>Notes: {selectedFinding.notes || 'No notes available'}</Text>
@@ -218,5 +265,11 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  thumbnailWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    overflow: 'hidden'
   },
 });
