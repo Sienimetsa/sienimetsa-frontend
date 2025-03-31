@@ -1,24 +1,16 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Button } from 'react-native';
 import ChatScreen from './Screens/ChatScreen';
 import HomeScreen from './Screens/HomeScreen';
 import LibraryScreen from './Screens/LibraryScreen';
-import { AuthContext } from './Service/AuthContext';
+import ProfileScreen from './Screens/ProfileScreen'; // Import ProfileScreen
 import LibraryStackNavigator from './LibraryStackNavigator';
+import LogoutButton from './Components/LogoutButton'; // Import LogoutButton
 
 const Tab = createBottomTabNavigator();
 
 export default function BottomTabNavigator({ navigation }) {
-  const { logout } = useContext(AuthContext);  // Get logout function from AuthContext
-
-  // Handle logout logic
-  const handleLogout = async () => {
-    await logout();  // Call the logout function from the context
-    navigation.navigate('Login');  // Navigate to the login screen after logout
-  };
-
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -31,28 +23,39 @@ export default function BottomTabNavigator({ navigation }) {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Library') {
             iconName = focused ? 'library' : 'library-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
+        tabBarShowLabel: false, // Hide text labels
         tabBarActiveTintColor: 'white',
         tabBarInactiveTintColor: 'white',
         tabBarStyle: {
-          backgroundColor: '#574E47', // bottom tab background color
-          borderTopWidth: 0, // Removes top border
+          backgroundColor: '#574E47', // Change bottom tab background color
+          borderTopWidth: 0, // Remove top border
+          paddingTop: 10,
         },
-        headerStyle: { backgroundColor: '#574E47' }, 
-        headerTintColor: 'white', // 
+        headerStyle: { backgroundColor: '#574E47' },
+        headerTintColor: 'white',
       })}
     >
       <Tab.Screen name="Chat" component={ChatScreen} />
-      <Tab.Screen name="Home" component={HomeScreen} 
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen} 
         options={{
-          headerRight: () => (
-            <Button title="Log Out" onPress={handleLogout} color="black" />
-          ),
+          headerRight: () => <LogoutButton navigation={navigation} />, 
         }} 
       />
       <Tab.Screen name="Library" component={LibraryStackNavigator} />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen} 
+        options={{
+          headerRight: () => <LogoutButton navigation={navigation} />, 
+        }} 
+      />
     </Tab.Navigator>
   );
 }

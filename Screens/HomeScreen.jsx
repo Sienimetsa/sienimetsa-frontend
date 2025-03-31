@@ -131,11 +131,7 @@ export default function HomeScreen() {
       {/* WELCOME MESSAGE BLOCK */}
       <Text style={styles.welcomeText}>Welcome, {user ? user.email : "Loading"}!</Text>
 
-      {/* SETTINGS BUTTON BLOCK */}
-      <Button
-        title="Go to Profile"
-        onPress={() => navigation.navigate('Profile')}
-      />
+ 
 
       {/* CAMERA VIEW BLOCK */}
       <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
