@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform,ImageBackground } from "react-native";
 import { Client } from "@stomp/stompjs";
 import { AuthContext } from "../Service/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchCurrentUser } from "../Components/Fetch.js";
 import { API_SOCKET_URL } from "@env";
+import { Keyboard } from "react-native";
 
 const ChatScreen = () => {
   // Retrieve user information from AuthContext
@@ -94,6 +95,7 @@ useEffect(() => {
         }),
       });
       setInput(""); // Clear input field after sending message
+      Keyboard.dismiss(); // Hide the keyboard
     } else {
       console.warn("WebSocket not connected.");
     }
@@ -101,82 +103,95 @@ useEffect(() => {
 
   // Scroll to the latest message when new messages arrive
   useEffect(() => {
+    // Scroll to the latest message when messages update
     if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({ animated: true });
+      setTimeout(() => {
+        flatListRef.current.scrollToEnd({ animated: true });
+      }, 100);
     }
-  }, [messages]);
-
+  
+    // Keyboard event listeners
+    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    });
+  
+    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    });
+  
+    // Cleanup function
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, [messages]); // Dependency array includes messages
+  
+  
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : null}>
+    <ImageBackground 
+    source={require('../assets/Backgrounds/sieni-bg.jpg')}
+    style={styles.container}
+    resizeMode="cover"
+  >
+<KeyboardAvoidingView 
+  style={styles.container} 
+  behavior={Platform.OS === "ios" ? "padding" : "height"} 
+  keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 70} // Adjust offset
+>
+
+    <View style={{ flex: 1 }}>  
       <FlatList
-        ref={flatListRef} // Assign FlatList reference for auto-scrolling
+        ref={flatListRef}
         data={messages}
         keyExtractor={(item, index) => index.toString()}
+        initialNumToRender={20} // Ensures some messages load first
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })} // Auto-scroll on size change
+        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })} // Scroll when FlatList loads
+        keyboardShouldPersistTaps="handled" // Dismiss keyboard when tapping outside input
         renderItem={({ item }) => {
-          const messageColor = item.chatColor || "#000"; // Use chatColor if available, else default to black
-          const isOwnMessage = item.username === username; // Check if the message belongs to the current user
-          const messageLength = item.text.length;
-          const usernameLength = item.username ? item.username.length : 0;
-
-          // Dynamically set the width of the message bubble based on text length
-          let messageWidth = 'auto'; // Default width
-
-          if (messageLength < 6) {
-            messageWidth = '45%';
-          } else if (messageLength < 11) {
-            messageWidth = '50%';
-          }
-          else {
-            messageWidth = '60%';
-          }
-
-          // Dynamically set the width of the username based on the username length
-          let usernameWidth = 'auto';
-
-          if (usernameLength < 6) {
-            usernameWidth = '50%';
-          } else if (usernameLength < 9) {
-            usernameWidth = '60%';
-          } else {
-            usernameWidth = '80%';
-          }
-
-
+          const isOwnMessage = item.username === username;
           return (
             <View
               style={[
                 styles.messageContainer,
                 {
-                  backgroundColor: messageColor, // Chat bubble color
-                  alignSelf: isOwnMessage ? "flex-end" : "flex-start", // Align message based on sender
-                  width: messageWidth, // Set width dynamically
+                  backgroundColor: item.chatColor || "#000",
+                  alignSelf: isOwnMessage ? "flex-end" : "flex-start",
                 },
               ]}
             >
-              {/* Display username above the message */}
-              <Text style={[styles.username, { color: "#fff", width: usernameWidth }]}>
-                {item.username || "Anonymous"}:
-              </Text>
-              {/* Display chat message text */}
-              <Text style={[styles.messageText, { color: "#fff" }]}>{item.text}</Text>
+              <Text style={styles.username}>{item.username || "Anonymous"}:</Text>
+              <Text style={styles.messageText}>{item.text}</Text>
             </View>
           );
         }}
       />
+    </View>
 
-      {/* Input box and send button */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="Type a message"
-          style={styles.input}
-        />
-        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+    {/* Input Box */}
+    <View style={styles.inputContainer}>
+      <TextInput
+        value={input}
+        onChangeText={setInput}
+        placeholder="Type a message"
+        style={styles.input}
+        onFocus={() => flatListRef.current?.scrollToEnd({ animated: true })} // Scroll to bottom on focus
+      />
+      <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+        <Text style={styles.sendButtonText}>Send</Text>
+      </TouchableOpacity>
+
+
+      
+    </View>
+
+
+</KeyboardAvoidingView>
+</ImageBackground>
   );
 };
 
@@ -184,7 +199,6 @@ useEffect(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f2e4c4",
     padding: 10,
   },
   messageContainer: {
@@ -192,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 12,
     padding: 10,
-    marginTop: 5,
+  
     paddingHorizontal: 12,
     borderRadius: 15,
     shadowColor: "#967e45",
@@ -207,11 +221,13 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     flexShrink: 1,
     width: "100%",
+    color: "#fff",
   },
   username: {
     fontWeight: "bold",
     marginBottom: 4,
     fontSize: 15,
+    color: "#fff",
   },
   inputContainer: {
     flexDirection: "row",
@@ -221,17 +237,18 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 2,
-    borderColor: "#967e45",
+    borderColor: "#574E47",
     borderRadius: 25,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 17,
     marginRight: 10,
-    backgroundColor: "#f0e7d1",
+    backgroundColor: "rgb(239, 234, 228)",
     marginBottom: 15,
+    color: "#574E47",
   },
   sendButton: {
-    backgroundColor: "#967e45",
+    backgroundColor: "#574E47",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,

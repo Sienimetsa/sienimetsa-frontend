@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
   View, Text, TextInput, Button, Alert, Image, TouchableOpacity,
-  StyleSheet, Modal, FlatList, TouchableWithoutFeedback, Keyboard
+  StyleSheet, Modal, FlatList, TouchableWithoutFeedback, Keyboard, ImageBackground
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -214,211 +214,224 @@ export default function ProfileScreen({ navigation }) {
 
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+    <ImageBackground
+      source={require('../assets/Backgrounds/sieni-bg.jpg')} // Adjust the path if needed
+      style={styles.container}
+      resizeMode="cover" // Optional: Adjust how the image scales
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
 
-
-        <View style={styles.introContainer}>
-          {/* Profile Picture Selection */}
-          <TouchableOpacity onPress={openProfilePictureModal} style={styles.profileContainer}>
-            <Image source={profilePictureMap[profilePicture]} style={styles.profileImage} />
-            <View style={styles.editIconCircle}>
-              <Ionicons name="brush" size={16} color="#574E47" />
-            </View>
-          </TouchableOpacity>
-
-          <View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-
-              <Text onPress={() => setUsernameModalVisible(true)} style={styles.infoTextUsername}>{username}</Text>
-              <TouchableOpacity onPress={() => setUsernameModalVisible(true)}>
-                <View style={styles.editIconCirclePenicil}>
-                  <Ionicons name="pencil" size={13} color="white" />
+          <View style={styles.introContainerBox}>
+            <View style={styles.introContainer}>
+              {/* Profile Picture Selection */}
+              <TouchableOpacity onPress={openProfilePictureModal} style={styles.profileContainer}>
+                <Image source={profilePictureMap[profilePicture]} style={styles.profileImage} />
+                <View style={styles.editIconCircle}>
+                  <Ionicons name="brush" size={16} color="#574E47" />
                 </View>
               </TouchableOpacity>
-            </View>
 
-            <View style={{ flexDirection: 'row', gap: 2 }}>
-              <Text style={styles.infoTextLabel}>Level:</Text>
-              <Text style={styles.infoTextValue}>{level}</Text>
-            </View>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
 
-            <View style={{ flexDirection: 'row', gap: 2 }}>
-              <Text style={styles.infoTextLabel}>Unique Mushrooms Found:</Text>
-              <Text style={styles.infoTextValue}>{uniqueMushrooms}/10</Text>
-            </View>
-          </View>
-
-
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={styles.progressText}>Level Progress</Text>
-            <Progress.Bar
-              progress={calculateProgress()}
-              width={200}
-              height={20}
-              borderRadius={5}
-              color="#574E47"
-              unfilledColor="#d3d3d3"
-            />
-            <Text style={styles.progressPercentage}>{Math.round(calculateProgress() * 100)}%</Text>
-          </View>
-        </View>
-        <View style={styles.hr} />
-
-        {/* Modal for Selecting Profile Picture */}
-        <Modal visible={modalVisible} animationType="fade" transparent={true}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Choose Profile Picture</Text>
-              <FlatList
-                data={Object.keys(profilePictureMap)}
-                numColumns={3}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    testID={`profile-picture-${item}`}
-                    onPress={() => selectProfilePicture(item)}>
-                    <Image source={profilePictureMap[item]} style={styles.modalImage} accessibilityRole="image" />
+                  <Text onPress={() => setUsernameModalVisible(true)} style={styles.infoTextUsername}>{username}</Text>
+                  <TouchableOpacity onPress={() => setUsernameModalVisible(true)}>
+                    <View style={styles.editIconCirclePenicil}>
+                      <Ionicons name="pencil" size={13} color="white" />
+                    </View>
                   </TouchableOpacity>
-                )}
-              />
-              <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 2 }}>
+                  <Text style={styles.infoTextLabel}>Level:</Text>
+                  <Text style={styles.infoTextValue}>{level}</Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 2 }}>
+                  <Text style={styles.infoTextLabel}>Unique Mushrooms Found:</Text>
+                  <Text style={styles.infoTextValue}>{uniqueMushrooms}/10</Text>
+                </View>
+              </View>
+
+
             </View>
-          </View>
-        </Modal>
 
-        {/* Modal for Editing Username */}
-        <Modal visible={usernameModalVisible} animationType="fade" transparent={true}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Change Username</Text>
-
-              <TextInput
-                style={styles.input}
-                value={username}
-                onChangeText={setUsername}
-                placeholder="Enter new username"
-              />
-              <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
-                <Button title="Save" onPress={() => setUsernameModalVisible(false)} />
-
-                <Button title="Cancel" onPress={() => setUsernameModalVisible(false)} color="red" />
+            {/* Progress Bar */}
+            <View style={styles.progressContainer}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={styles.progressText}>Level Progress</Text>
+                <Progress.Bar
+                  progress={calculateProgress()}
+                  width={150}
+                  height={20}
+                  borderRadius={5}
+                  color="#574E47"
+                  unfilledColor="#d3d3d3"
+                />
+                <Text style={styles.progressPercentage}>{Math.round(calculateProgress() * 100)}%</Text>
               </View>
             </View>
-          </View>
-        </Modal>
+            <View style={styles.hr} />
 
-        {/* Chat Color Selection */}
-        <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
-          <Text style={styles.label}>Chat Color</Text>
-          <TouchableOpacity onPress={openColorModal} style={[styles.colorPreview, { backgroundColor: chatColor }]}>
-            <Text style={styles.colorText}>Select Chat Color</Text>
-          </TouchableOpacity>
-        </View>
-        {/* Chat Color Modal */}
-        <Modal visible={colorModalVisible} animationType="fade" transparent={true}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Choose Chat Color </Text>
+            {/* Modal for Selecting Profile Picture */}
+            <Modal visible={modalVisible} animationType="fade" transparent={true}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Choose Profile Picture</Text>
+                  <FlatList
+                    data={Object.keys(profilePictureMap)}
+                    numColumns={3}
+                    keyExtractor={(item) => item}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        testID={`profile-picture-${item}`}
+                        onPress={() => selectProfilePicture(item)}>
+                        <Image source={profilePictureMap[item]} style={styles.modalImage} accessibilityRole="image" />
+                      </TouchableOpacity>
+                    )}
+                  />
+                  <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+                </View>
+              </View>
+            </Modal>
 
-              <FlatList
-                data={COLORS}
-                numColumns={4}
-                keyExtractor={(item) => item.hex}
-                renderItem={({ item }) => (
-                  <TouchableOpacity onPress={() => selectChatColor(item.hex)} style={[styles.colorCircle, { backgroundColor: item.hex }]}>
-                    {chatColor === item.hex && <Text style={styles.selectedColor}>✔</Text>}
-                  </TouchableOpacity>
-                )}
-              />
-              <Button title="Cancel" onPress={() => setColorModalVisible(false)} color="red" />
+            {/* Modal for Editing Username */}
+            <Modal visible={usernameModalVisible} animationType="fade" transparent={true}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Change Username</Text>
+
+                  <TextInput
+                    style={styles.input}
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder="Enter new username"
+                  />
+                  <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
+                    <Button title="Save" onPress={() => setUsernameModalVisible(false)} />
+
+                    <Button title="Cancel" onPress={() => setUsernameModalVisible(false)} color="red" />
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
+            {/* Chat Color Selection */}
+            <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
+              <Text style={styles.label}>Chat Color</Text>
+              <TouchableOpacity onPress={openColorModal} style={[styles.colorPreview, { backgroundColor: chatColor }]}>
+                <Text style={styles.colorText}>Select Chat Color</Text>
+              </TouchableOpacity>
             </View>
+            {/* Chat Color Modal */}
+            <Modal visible={colorModalVisible} animationType="fade" transparent={true}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Choose Chat Color </Text>
+
+                  <FlatList
+                    data={COLORS}
+                    numColumns={4}
+                    keyExtractor={(item) => item.hex}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity onPress={() => selectChatColor(item.hex)} style={[styles.colorCircle, { backgroundColor: item.hex }]}>
+                        {chatColor === item.hex && <Text style={styles.selectedColor}>✔</Text>}
+                      </TouchableOpacity>
+                    )}
+                  />
+                  <Button title="Cancel" onPress={() => setColorModalVisible(false)} color="red" />
+                </View>
+              </View>
+            </Modal>
+
+
+            {/* Password Input */}
+            <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
+              <Text style={styles.label}>New Password</Text>
+              <TextInput
+                style={styles.input}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Enter new password"
+                secureTextEntry
+              />
+            </View>
+
+            {/* Save Button with Icon */}
+            <TouchableOpacity
+              testID="SaveChanges"
+              onPress={updateProfile}
+              style={styles.buttonSave}
+            >
+              <View style={styles.buttonContent}>
+                <Text style={styles.buttonText}>Save Changes</Text>
+                <Ionicons name="save" size={20} color="white" />
+              </View>
+            </TouchableOpacity>
+
           </View>
-        </Modal>
 
 
-        {/* Password Input */}
-        <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
-          <Text style={styles.label}>New Password</Text>
-          <TextInput
-            style={styles.input}
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="Enter new password"
-            secureTextEntry
-          />
+
+          {/* Delete Button with Icon */}
+          <TouchableOpacity
+            testID="DeleteAccount"
+            onPress={handleDelete}
+            style={[styles.buttonDelete]}
+          >
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Text style={styles.buttonTextDelete}>Delete Account</Text>
+              <Ionicons name="trash" size={20} color="black" />
+            </View>
+          </TouchableOpacity>
+          <Toast />
+
         </View>
-
-
-
-
-        {/* Save Button with Icon */}
-        <TouchableOpacity
-          testID="SaveChanges"
-          onPress={updateProfile}
-          style={[styles.buttonSave]}
-        >
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-
-            <Text style={styles.buttonText}>Save Changes</Text>
-            <Ionicons name="save" size={20} color="white" />
-          </View>
-
-        </TouchableOpacity>
-
-        {/* Delete Button with Icon */}
-        <TouchableOpacity
-          testID="DeleteAccount"
-          onPress={handleDelete}
-          style={[styles.buttonDelete]}
-        >
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Text style={styles.buttonTextDelete}>Delete Account</Text>
-            <Ionicons name="trash" size={20} color="black" />
-          </View>
-        </TouchableOpacity>
-        <Toast />
-
-      </View>
-    </TouchableWithoutFeedback>
+      </TouchableWithoutFeedback>
+    </ImageBackground>
   );
 }
 
-// Styles
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 10,
+    borderRadius: 30,
+    paddingTop: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  introContainerBox: {
+    backgroundColor: "rgba(255, 255, 255, 0.93)",
+    borderRadius: 20,
     padding: 20,
-    backgroundColor: "rgb(229, 225, 221)",
+    paddingBottom: 30,
   },
   introContainer: {
     flexDirection: 'row',
     gap: 20,
     alignItems: 'center',
     paddingBottom: 20,
-    paddingTop: 40,
-
+    paddingTop: 30,
   },
   infoTextLabel: {
     fontWeight: "bold",
     color: "#574E47",
-    fontSize: 14,
+    fontSize: 13,
   },
   infoTextValue: {
-    fontSize: 16,
+    fontSize: 14,
   },
   infoTextUsername: {
     fontWeight: "bold",
     color: "#574E47",
-    fontSize: 25,
+    fontSize: 23,
   },
   profileImage: {
-    width: 100,
-    height: 100,
+    width: 90,
+    height: 90,
     borderRadius: 50,
     alignSelf: "center",
   },
@@ -466,10 +479,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(72, 56, 38, 0.57)",
     borderWidth: 1,
     borderRadius: 5,
-    paddingLeft: 10,
-    backgroundColor: "rgb(232, 230, 228)",
+
+    backgroundColor: "rgba(232, 230, 228, 0.4)",
     marginTop: 5,
-    width: 220,
+    width: 160,
+    textAlign: "center",
   },
   colorPreview: {
     height: 40,
@@ -479,7 +493,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 10,
     marginBottom: 20,
-    width: 220,
+    width: 160,
   },
   colorText: {
     color: "#fff",
@@ -492,16 +506,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "white",
     padding: 20,
     borderRadius: 10,
-    width: "80%",
     alignItems: "center",
+    width: "80%",
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 15,
+    textAlign: "center",
   },
   colorCircle: {
     width: 40,
@@ -525,24 +540,33 @@ const styles = StyleSheet.create({
   buttonSave: {
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 30,
+    marginTop: 45,
+    alignItems: "center",
+    justifyContent: "center",
     marginVertical: 10,
-    backgroundColor: "rgb(117, 102, 82)",
-    marginTop: 60,
-
+    backgroundColor: "#574E47",
+    width: 200,
+    alignSelf: "center",
   },
+
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+
   buttonDelete: {
-    position: "absolute",
-    bottom: 50,
+
+    marginTop: 40,
     alignSelf: "center",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
-    width: 200,
+
   },
 
   buttonText: {
@@ -561,6 +585,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     padding: 10,
     marginTop: 25,
-    marginBottom: 28
+    marginBottom: 40
   },
 });

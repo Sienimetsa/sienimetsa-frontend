@@ -4,6 +4,7 @@ const profilePictureMap = {
     "pp3": require("../assets/profileicons/pp-3.png"),
     "pp4": require("../assets/profileicons/pp-4.png"),
     "pp5": require("../assets/profileicons/pp-5.png"),
+    "pp6": require("../assets/profileicons/pp-6.png"),
   };
   
   export default profilePictureMap;
