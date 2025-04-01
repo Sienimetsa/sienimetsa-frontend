@@ -265,7 +265,7 @@ export default function LibraryScreen({ navigation }) {
 
                       {findingIds.includes(selectedMushroom.m_id) && (
                         <TouchableOpacity
-                          style={styles.findingsButton}
+                          style={styles.buttonFinding}
                           onPress={() => {
                             setModalVisible(false);
                             navigation.navigate('FindingsScreen', {
@@ -277,7 +277,11 @@ export default function LibraryScreen({ navigation }) {
                         </TouchableOpacity>
                       )}
 
-                      <Button title="Close" onPress={() => setModalVisible(false)} />
+                      <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                        <Text style={styles.closeButtonText}>
+                          Close
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   </TouchableWithoutFeedback>
                 </View>
@@ -326,7 +330,7 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: "#fff",
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 30,
     width: "85%",
     alignItems: "center",
     borderWidth: 5,
@@ -348,15 +352,13 @@ const styles = StyleSheet.create({
     margin: 10,
     resizeMode: "contain",
   },
-  findingsButton: {
-    margin: 10,
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: '#4CAF50',
-  },
   findingsButtonText: {
     color: '#fff',
-    fontFamily: 'Nunito-Medium',
+    fontFamily: 'Nunito-Bold',
+  },
+  closeButtonText: {
+    color: '#574E47',
+    fontFamily: 'Nunito-Bold',
   },
   introContainerBox: {
     backgroundColor: "rgba(255, 255, 255, 0.93)",
@@ -471,5 +473,29 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontFamily: 'Nunito-Medium',
+  },
+  buttonFinding: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginTop: 45,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+    backgroundColor: "#574E47",
+    width: 200,
+    alignSelf: "center",
+  },
+  closeButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#D7C5B7",
+    width: 200,
+    alignSelf: "center",
   },
 });
