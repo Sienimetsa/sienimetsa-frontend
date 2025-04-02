@@ -15,14 +15,14 @@ import * as Progress from 'react-native-progress';
 
 
 const COLORS = [
-  { name: "Red", hex: "#ed1a28" },
-  { name: "Blue", hex: "#3498DB" },
-  { name: "Green", hex: "#12b512" },
-  { name: "Yellow", hex: "#F1C40F" },
+  { name: "Red", hex: "#CF4C3F" },
+  { name: "Blue", hex: "#3E84C1" },
+  { name: "Green", hex: "#93B819" },
+  { name: "Yellow", hex: "#D8C00F" },
   { name: "Purple", hex: "#9B59B6" },
-  { name: "Orange", hex: "#E67E22" },
-  { name: "Pink", hex: "#FF69B4" },
-  { name: "Black", hex: "#000000" },
+  { name: "Orange", hex: "#D47D48" },
+  { name: "Pink", hex: "#E36893" },
+  { name: "brown", hex: '#574E47' },
 ];
 export default function ProfileScreen({ navigation }) {
   const { user, setUser, logout, deleteAccount } = useContext(AuthContext); // Retrieve user data and actions from AuthContext
@@ -33,6 +33,7 @@ export default function ProfileScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [colorModalVisible, setColorModalVisible] = useState(false);
   const [level, setLevel] = useState(1);
+  const [progress, setProgress] = useState(0);
   const [uniqueMushrooms, setUniqueMushrooms] = useState(0);
   const [usernameModalVisible, setUsernameModalVisible] = useState(false);
 
@@ -50,6 +51,7 @@ export default function ProfileScreen({ navigation }) {
         setProfilePicture(result.profilePicture);
         setChatColor(result.chatColor);
         setLevel(result.level || 1);
+        setProgress(result.progress || 0);
 
         // Assuming result.uniqueMushrooms is an array of mushroom IDs
         if (result.uniqueMushrooms && Array.isArray(result.uniqueMushrooms)) {
@@ -81,12 +83,7 @@ export default function ProfileScreen({ navigation }) {
     });
   };
 
-  // Function to calculate progress towards the next level
-  const calculateProgress = () => {
-    const mushroomsPerLevel = Math.max(1, Math.round(10 / (level * 0.1 + 1)));  // Slowing down level-up increment
-    const nextLevelThreshold = level * mushroomsPerLevel; // Number of mushrooms required for next level
-    return Math.min(uniqueMushrooms / nextLevelThreshold, 1);  // Progress capped at 100%
-  };
+
 
   // Check username availability
   const checkUsernameAvailability = async () => {
@@ -219,7 +216,12 @@ export default function ProfileScreen({ navigation }) {
       style={styles.container}
       resizeMode="cover" // Optional: Adjust how the image scales
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <TouchableWithoutFeedback
+        onPress={() => {
+          Keyboard.dismiss();  // Dismiss the keyboard
+        }}
+      >
+
         <View style={styles.container}>
 
           <View style={styles.introContainerBox}>
@@ -235,7 +237,7 @@ export default function ProfileScreen({ navigation }) {
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
 
-                  <Text onPress={() => setUsernameModalVisible(true)} style={styles.infoTextUsername}>{username}</Text>
+                  <Text onPress={() => setUsernameModalVisible(true)} style={styles.infoTextUsername} numberOfLines={1} adjustsFontSizeToFit >{username}</Text>
                   <TouchableOpacity onPress={() => setUsernameModalVisible(true)}>
                     <View style={styles.editIconCirclePenicil}>
                       <Ionicons name="pencil" size={13} color="white" />
@@ -249,8 +251,8 @@ export default function ProfileScreen({ navigation }) {
                 </View>
 
                 <View style={{ flexDirection: 'row', gap: 2 }}>
-                  <Text style={styles.infoTextLabel}>Unique Mushrooms Found:</Text>
-                  <Text style={styles.infoTextValue}>{uniqueMushrooms}/10</Text>
+                  <Text style={styles.infoTextLabel}>Unique Mushrooms :</Text>
+                  <Text style={styles.infoTextValue}>{uniqueMushrooms}/100</Text>
                 </View>
               </View>
 
@@ -262,60 +264,78 @@ export default function ProfileScreen({ navigation }) {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text style={styles.progressText}>Level Progress</Text>
                 <Progress.Bar
-                  progress={calculateProgress()}
+                  progress={progress / 100}  // Convert progress to a value between 0 and 1
                   width={150}
                   height={20}
                   borderRadius={5}
                   color="#574E47"
                   unfilledColor="#d3d3d3"
                 />
-                <Text style={styles.progressPercentage}>{Math.round(calculateProgress() * 100)}%</Text>
+                <Text style={styles.progressText}>{Math.round(progress)}%</Text>
               </View>
             </View>
             <View style={styles.hr} />
 
+
             {/* Modal for Selecting Profile Picture */}
             <Modal visible={modalVisible} animationType="fade" transparent={true}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Choose Profile Picture</Text>
-                  <FlatList
-                    data={Object.keys(profilePictureMap)}
-                    numColumns={3}
-                    keyExtractor={(item) => item}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        testID={`profile-picture-${item}`}
-                        onPress={() => selectProfilePicture(item)}>
-                        <Image source={profilePictureMap[item]} style={styles.modalImage} accessibilityRole="image" />
+              <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                  <TouchableWithoutFeedback>
+                    <View style={styles.modalContent}>
+                      <TouchableOpacity style={styles.closeIcon} onPress={() => setModalVisible(false)}>
+                        <Ionicons name="close" size={24} color="#574E47" />
                       </TouchableOpacity>
-                    )}
-                  />
-                  <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+                      <Text style={styles.modalTitle}>Choose Profile Picture</Text>
+                      <FlatList
+                        data={Object.keys(profilePictureMap)}
+                        numColumns={3}
+                        keyExtractor={(item) => item}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            testID={`profile-picture-${item}`}
+                            onPress={() => selectProfilePicture(item)}>
+                            <Image source={profilePictureMap[item]} style={styles.modalImage} accessibilityRole="image" />
+                          </TouchableOpacity>
+                        )}
+                      />
+                    </View>
+                  </TouchableWithoutFeedback>
                 </View>
-              </View>
+              </TouchableWithoutFeedback>
             </Modal>
+
+
 
             {/* Modal for Editing Username */}
             <Modal visible={usernameModalVisible} animationType="fade" transparent={true}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Change Username</Text>
+              <TouchableWithoutFeedback onPress={() => setUsernameModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                  <TouchableWithoutFeedback>
+                    <View style={styles.modalContent}>
+                      <TouchableOpacity style={styles.closeIcon} onPress={() => setUsernameModalVisible(false)}>
+                        <Ionicons name="close" size={24} color="#574E47" />
+                      </TouchableOpacity>
+                      <Text style={styles.modalTitle}>Change Username</Text>
+                      <View style={{ flexDirection: 'row', gap: 15 }}>
+                        <TextInput
+                          style={styles.input}
+                          value={username}
+                          onChangeText={setUsername}
+                          placeholder="Enter new username"
+                        />
 
-                  <TextInput
-                    style={styles.input}
-                    value={username}
-                    onChangeText={setUsername}
-                    placeholder="Enter new username"
-                  />
-                  <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
-                    <Button title="Save" onPress={() => setUsernameModalVisible(false)} />
+                        <TouchableOpacity style={styles.buttonSaveUsername} onPress={() => setUsernameModalVisible(false)}>
+                          <Text style={styles.buttonText}>Save</Text>
+                        </TouchableOpacity>
 
-                    <Button title="Cancel" onPress={() => setUsernameModalVisible(false)} color="red" />
-                  </View>
+                      </View>
+                    </View>
+                  </TouchableWithoutFeedback>
                 </View>
-              </View>
+              </TouchableWithoutFeedback>
             </Modal>
+
 
             {/* Chat Color Selection */}
             <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
@@ -326,24 +346,32 @@ export default function ProfileScreen({ navigation }) {
             </View>
             {/* Chat Color Modal */}
             <Modal visible={colorModalVisible} animationType="fade" transparent={true}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Choose Chat Color </Text>
-
-                  <FlatList
-                    data={COLORS}
-                    numColumns={4}
-                    keyExtractor={(item) => item.hex}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity onPress={() => selectChatColor(item.hex)} style={[styles.colorCircle, { backgroundColor: item.hex }]}>
-                        {chatColor === item.hex && <Text style={styles.selectedColor}>✔</Text>}
+              <TouchableWithoutFeedback onPress={() => setColorModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                  <TouchableWithoutFeedback>
+                    <View style={styles.modalContent}>
+                      <TouchableOpacity style={styles.closeIcon} onPress={() => setColorModalVisible(false)}>
+                        <Ionicons name="close" size={24} color="#574E47" />
                       </TouchableOpacity>
-                    )}
-                  />
-                  <Button title="Cancel" onPress={() => setColorModalVisible(false)} color="red" />
+                      <Text style={styles.modalTitle}>Choose Chat Color </Text>
+
+                      <FlatList
+                        data={COLORS}
+                        numColumns={4}
+                        keyExtractor={(item) => item.hex}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity onPress={() => selectChatColor(item.hex)} style={[styles.colorCircle, { backgroundColor: item.hex }]}>
+                            {chatColor === item.hex && <Text style={styles.selectedColor}>✔</Text>}
+                          </TouchableOpacity>
+                        )}
+                      />
+
+                    </View>
+                  </TouchableWithoutFeedback>
                 </View>
-              </View>
+              </TouchableWithoutFeedback>
             </Modal>
+
 
 
             {/* Password Input */}
@@ -380,7 +408,7 @@ export default function ProfileScreen({ navigation }) {
             onPress={handleDelete}
             style={[styles.buttonDelete]}
           >
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 5 }}>
               <Text style={styles.buttonTextDelete}>Delete Account</Text>
               <Ionicons name="trash" size={20} color="black" />
             </View>
@@ -406,8 +434,17 @@ const styles = StyleSheet.create({
   introContainerBox: {
     backgroundColor: "rgba(255, 255, 255, 0.93)",
     borderRadius: 20,
-    padding: 20,
+    padding: 30,
     paddingBottom: 30,
+    shadowColor: "rgb(156, 131, 102)",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+
   },
   introContainer: {
     flexDirection: 'row',
@@ -417,17 +454,23 @@ const styles = StyleSheet.create({
     paddingTop: 30,
   },
   infoTextLabel: {
+    fontFamily: 'Nunito-ExtraBold',
     fontWeight: "bold",
-    color: "#574E47",
-    fontSize: 13,
-  },
-  infoTextValue: {
+    color: '#574E47',
     fontSize: 14,
   },
+  infoTextValue: {
+    fontFamily: 'Nunito-Medium',
+    fontSize: 14,
+    color: '#574E47',
+  },
   infoTextUsername: {
+    fontFamily: 'Nunito-Bold',
     fontWeight: "bold",
     color: "#574E47",
+    maxWidth: 180,
     fontSize: 23,
+    marginRight: 7,
   },
   profileImage: {
     width: 90,
@@ -451,6 +494,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgb(176, 167, 156)",
+
   },
   editIconCirclePenicil: {
     position: "absolute",
@@ -462,6 +506,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+    marginRight: 10,
+
+  },
+  progressText: {
+    fontFamily: 'Nunito-medium',
+    color: '#574E47',
+
   },
   changeText: {
     textAlign: "center",
@@ -469,21 +520,22 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   label: {
+    fontFamily: 'Nunito-bold',
     fontSize: 16,
     fontWeight: "bold",
     marginTop: 20,
     color: "rgb(72, 56, 38)",
   },
   input: {
+    fontFamily: 'Nunito-medium',
     height: 40,
     borderColor: "rgba(72, 56, 38, 0.57)",
     borderWidth: 1,
     borderRadius: 5,
-
-    backgroundColor: "rgba(232, 230, 228, 0.4)",
+    backgroundColor: "rgb(244, 242, 241)",
     marginTop: 5,
     width: 160,
-    textAlign: "center",
+    paddingHorizontal: 10,
   },
   colorPreview: {
     height: 40,
@@ -496,8 +548,9 @@ const styles = StyleSheet.create({
     width: 160,
   },
   colorText: {
+    fontFamily: 'Nunito-SemiBold',
     color: "#fff",
-    fontWeight: "bold",
+
   },
   modalContainer: {
     flex: 1,
@@ -507,14 +560,15 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "white",
-    padding: 20,
+    padding: 36,
     borderRadius: 10,
     alignItems: "center",
     width: "80%",
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: 'Nunito-extraBold',
+    color: '#574E47',
     marginBottom: 15,
     textAlign: "center",
   },
@@ -549,6 +603,16 @@ const styles = StyleSheet.create({
     width: 200,
     alignSelf: "center",
   },
+  buttonSaveUsername: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#574E47",
+    maxWidth: 120,
+    alignSelf: "center",
+  },
 
   buttonContent: {
     flexDirection: "row",
@@ -558,7 +622,6 @@ const styles = StyleSheet.create({
   },
 
   buttonDelete: {
-
     marginTop: 40,
     alignSelf: "center",
     paddingVertical: 12,
@@ -566,25 +629,34 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
-
   },
 
   buttonText: {
     color: 'white',
     fontSize: 13,
     fontWeight: 'bold',
+    fontFamily: 'Nunito-bold',
   },
   buttonTextDelete: {
     color: 'black',
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: 'Nunito-bold',
+    textShadowColor: "rgb(241, 232, 218)",  
+    textShadowOffset: { width: 3, height: 0 },  
+    textShadowRadius: 5,  
   },
   hr: {
     borderBottomWidth: 1,
     borderBottomColor: "rgb(117, 102, 82)",
     marginVertical: 10,
     padding: 10,
-    marginTop: 25,
-    marginBottom: 40
+    marginTop: 23,
+    marginBottom: 36
+  },
+  closeIcon: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    zIndex: 10,
   },
 });
