@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import ChatScreen from './Screens/ChatScreen';
 import HomeScreen from './Screens/HomeScreen';
-import LibraryScreen from './Screens/LibraryScreen';
 import ProfileScreen from './Screens/ProfileScreen'; // Import ProfileScreen
 import LibraryStackNavigator from './LibraryStackNavigator';
 import LogoutButton from './Components/LogoutButton'; // Import LogoutButton
@@ -38,6 +37,7 @@ export default function BottomTabNavigator({ navigation }) {
         },
         headerStyle: { backgroundColor: '#574E47' },
         headerTintColor: 'white',
+        headerTitleStyle: { fontFamily: 'Nunito-Bold' },
       })}
     >
       <Tab.Screen name="Chat" component={ChatScreen} />
