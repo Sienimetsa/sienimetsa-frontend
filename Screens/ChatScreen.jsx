@@ -252,7 +252,7 @@ const ChatScreen = () => {
                   ]}
                 >
                   <TouchableOpacity onPress={() => handleUsernameClick(item.username)}>
-                    <Text style={{ fontWeight: "bold", color: "white" }}>{item.username}</Text>
+                    <Text style={styles.username}>{item.username}</Text>
                   </TouchableOpacity>
 
                   <Text style={styles.messageText} numberOfLines={10} adjustsFontSizeToFit>{item.text}</Text>
@@ -300,24 +300,22 @@ const styles = StyleSheet.create({
     padding: 10,
     paddingHorizontal: 12,
     borderRadius: 15,
-    shadowColor: "#967e45",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    overflow: "hidden",
+    backgroundColor: "white", // Ensure background color is set
     minWidth: 60,
+    
   },
+  
   messageText: {
-    fontSize: 17,
+    fontSize: 16,
     flexWrap: "wrap",
     flexShrink: 1,
     maxWidth: 250,
     color: "#fff",
+    fontFamily: 'Nunito-medium',
   },
   username: {
-    fontWeight: "bold",
-    marginBottom: 4,
-    fontSize: 17,
+    fontFamily: 'Nunito-extrabold',
+    fontSize: 15,
     color: "#fff",
   },
   inputContainer: {
@@ -337,6 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgb(234, 230, 229)",
     marginBottom: 15,
     color: "#574E47",
+    fontFamily: 'Nunito-medium',
   },
   sendButton: {
     backgroundColor: "#574E47",
@@ -348,7 +347,7 @@ const styles = StyleSheet.create({
   sendButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: 'Nunito-bold',
   },
   modalContainer: {
     flex: 1,
@@ -365,7 +364,7 @@ const styles = StyleSheet.create({
   },
   profileUsername: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontFamily: 'Nunito-bold',
     maxWidth: 150,  
     color: "#574E47",
   },

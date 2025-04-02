@@ -15,14 +15,14 @@ import * as Progress from 'react-native-progress';
 
 
 const COLORS = [
-  { name: "Red", hex: "#ed1a28" },
-  { name: "Blue", hex: "#3498DB" },
-  { name: "Green", hex: "#12b512" },
-  { name: "Yellow", hex: "#F1C40F" },
+  { name: "Red", hex: "#CF4C3F" },
+  { name: "Blue", hex: "#3E84C1" },
+  { name: "Green", hex: "#93B819" },
+  { name: "Yellow", hex: "#D8C00F" },
   { name: "Purple", hex: "#9B59B6" },
-  { name: "Orange", hex: "#E67E22" },
-  { name: "Pink", hex: "#FF69B4" },
-  { name: "Black", hex: "#000000" },
+  { name: "Orange", hex: "#D47D48" },
+  { name: "Pink", hex: "#E36893" },
+  { name: "brown", hex: '#574E47' },
 ];
 export default function ProfileScreen({ navigation }) {
   const { user, setUser, logout, deleteAccount } = useContext(AuthContext); // Retrieve user data and actions from AuthContext
@@ -271,7 +271,7 @@ export default function ProfileScreen({ navigation }) {
                   color="#574E47"
                   unfilledColor="#d3d3d3"
                 />
-                <Text style={styles.progressPercentage}>{Math.round(progress)}%</Text>
+                <Text style={styles.progressText}>{Math.round(progress)}%</Text>
               </View>
             </View>
             <View style={styles.hr} />
@@ -284,7 +284,7 @@ export default function ProfileScreen({ navigation }) {
                   <TouchableWithoutFeedback>
                     <View style={styles.modalContent}>
                       <TouchableOpacity style={styles.closeIcon} onPress={() => setModalVisible(false)}>
-                        <Ionicons name="close" size={24} color="black" />
+                        <Ionicons name="close" size={24} color="#574E47" />
                       </TouchableOpacity>
                       <Text style={styles.modalTitle}>Choose Profile Picture</Text>
                       <FlatList
@@ -314,7 +314,7 @@ export default function ProfileScreen({ navigation }) {
                   <TouchableWithoutFeedback>
                     <View style={styles.modalContent}>
                       <TouchableOpacity style={styles.closeIcon} onPress={() => setUsernameModalVisible(false)}>
-                        <Ionicons name="close" size={24} color="black" />
+                        <Ionicons name="close" size={24} color="#574E47" />
                       </TouchableOpacity>
                       <Text style={styles.modalTitle}>Change Username</Text>
                       <View style={{ flexDirection: 'row', gap: 15 }}>
@@ -351,7 +351,7 @@ export default function ProfileScreen({ navigation }) {
                   <TouchableWithoutFeedback>
                     <View style={styles.modalContent}>
                       <TouchableOpacity style={styles.closeIcon} onPress={() => setColorModalVisible(false)}>
-                        <Ionicons name="close" size={24} color="black" />
+                        <Ionicons name="close" size={24} color="#574E47" />
                       </TouchableOpacity>
                       <Text style={styles.modalTitle}>Choose Chat Color </Text>
 
@@ -408,7 +408,7 @@ export default function ProfileScreen({ navigation }) {
             onPress={handleDelete}
             style={[styles.buttonDelete]}
           >
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 5 }}>
               <Text style={styles.buttonTextDelete}>Delete Account</Text>
               <Ionicons name="trash" size={20} color="black" />
             </View>
@@ -436,6 +436,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 30,
     paddingBottom: 30,
+    shadowColor: "rgb(156, 131, 102)",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
 
   },
   introContainer: {
@@ -446,14 +454,18 @@ const styles = StyleSheet.create({
     paddingTop: 30,
   },
   infoTextLabel: {
+    fontFamily: 'Nunito-ExtraBold',
     fontWeight: "bold",
-    color: "#574E47",
-    fontSize: 13,
-  },
-  infoTextValue: {
+    color: '#574E47',
     fontSize: 14,
   },
+  infoTextValue: {
+    fontFamily: 'Nunito-Medium',
+    fontSize: 14,
+    color: '#574E47',
+  },
   infoTextUsername: {
+    fontFamily: 'Nunito-Bold',
     fontWeight: "bold",
     color: "#574E47",
     maxWidth: 180,
@@ -497,18 +509,25 @@ const styles = StyleSheet.create({
     marginRight: 10,
 
   },
+  progressText: {
+    fontFamily: 'Nunito-medium',
+    color: '#574E47',
+
+  },
   changeText: {
     textAlign: "center",
     color: "#007BFF",
     marginTop: 5,
   },
   label: {
+    fontFamily: 'Nunito-bold',
     fontSize: 16,
     fontWeight: "bold",
     marginTop: 20,
     color: "rgb(72, 56, 38)",
   },
   input: {
+    fontFamily: 'Nunito-medium',
     height: 40,
     borderColor: "rgba(72, 56, 38, 0.57)",
     borderWidth: 1,
@@ -529,8 +548,9 @@ const styles = StyleSheet.create({
     width: 160,
   },
   colorText: {
+    fontFamily: 'Nunito-SemiBold',
     color: "#fff",
-    fontWeight: "bold",
+
   },
   modalContainer: {
     flex: 1,
@@ -547,7 +567,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: 'Nunito-extraBold',
+    color: '#574E47',
     marginBottom: 15,
     textAlign: "center",
   },
@@ -614,19 +635,23 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 13,
     fontWeight: 'bold',
+    fontFamily: 'Nunito-bold',
   },
   buttonTextDelete: {
     color: 'black',
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: 'Nunito-bold',
+    textShadowColor: "rgb(241, 232, 218)",  
+    textShadowOffset: { width: 3, height: 0 },  
+    textShadowRadius: 5,  
   },
   hr: {
     borderBottomWidth: 1,
     borderBottomColor: "rgb(117, 102, 82)",
     marginVertical: 10,
     padding: 10,
-    marginTop: 25,
-    marginBottom: 40
+    marginTop: 23,
+    marginBottom: 36
   },
   closeIcon: {
     position: "absolute",
