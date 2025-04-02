@@ -185,3 +185,45 @@ export const createNewFinding = async (image, finding) => {
     };
   }
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//FETCH USER PROFILE BY USERNAME (for ProfileScreen)
+// This function fetches the user profile by username and returns only the necessary fields
+export const fetchUserProfileByUsername = async (clickedUsername) => {
+  try {
+    const token = await AsyncStorage.getItem("jwtToken");
+    if (!token) {
+      console.error("No JWT token found.");
+      return { error: "No JWT token found." };
+    }
+
+    const usersData = await fetchAllUsers(); // Fetch all users
+
+    // Access the users inside the '_embedded.appusers' field
+    const users = usersData?._embedded?.appusers;
+
+    if (Array.isArray(users)) {
+      const userProfile = users.find(user => user.username === clickedUsername);
+
+      if (userProfile) {
+        // Extract only the needed information from the user profile
+        const { username, chatColor, profilePicture, level, uniqueMushrooms } = userProfile;
+
+        return {
+          username,
+          chatColor,
+          profilePicture,
+          level,
+          uniqueMushrooms
+        };
+      } else {
+        console.error("User not found");
+        return { error: "User not found" };
+      }
+    } else {
+      return { error: "Unexpected response format for users data." };
+    }
+  } catch (error) {
+    return { error };
+  }
+};

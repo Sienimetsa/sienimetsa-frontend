@@ -219,7 +219,12 @@ export default function ProfileScreen({ navigation }) {
       style={styles.container}
       resizeMode="cover" // Optional: Adjust how the image scales
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <TouchableWithoutFeedback
+        onPress={() => {
+          Keyboard.dismiss();  // Dismiss the keyboard
+        }}
+      >
+
         <View style={styles.container}>
 
           <View style={styles.introContainerBox}>
@@ -235,7 +240,7 @@ export default function ProfileScreen({ navigation }) {
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
 
-                  <Text onPress={() => setUsernameModalVisible(true)} style={styles.infoTextUsername}>{username}</Text>
+                  <Text onPress={() => setUsernameModalVisible(true)} style={styles.infoTextUsername} numberOfLines={1} adjustsFontSizeToFit>{username}</Text>
                   <TouchableOpacity onPress={() => setUsernameModalVisible(true)}>
                     <View style={styles.editIconCirclePenicil}>
                       <Ionicons name="pencil" size={13} color="white" />
@@ -274,48 +279,67 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <View style={styles.hr} />
 
+
             {/* Modal for Selecting Profile Picture */}
             <Modal visible={modalVisible} animationType="fade" transparent={true}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Choose Profile Picture</Text>
-                  <FlatList
-                    data={Object.keys(profilePictureMap)}
-                    numColumns={3}
-                    keyExtractor={(item) => item}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        testID={`profile-picture-${item}`}
-                        onPress={() => selectProfilePicture(item)}>
-                        <Image source={profilePictureMap[item]} style={styles.modalImage} accessibilityRole="image" />
+              <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                  <TouchableWithoutFeedback>
+                    <View style={styles.modalContent}>
+                      <TouchableOpacity style={styles.closeIcon} onPress={() => setModalVisible(false)}>
+                        <Ionicons name="close" size={24} color="black" />
                       </TouchableOpacity>
-                    )}
-                  />
-                  <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+                      <Text style={styles.modalTitle}>Choose Profile Picture</Text>
+                      <FlatList
+                        data={Object.keys(profilePictureMap)}
+                        numColumns={3}
+                        keyExtractor={(item) => item}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            testID={`profile-picture-${item}`}
+                            onPress={() => selectProfilePicture(item)}>
+                            <Image source={profilePictureMap[item]} style={styles.modalImage} accessibilityRole="image" />
+                          </TouchableOpacity>
+                        )}
+                      />
+
+                    </View>
+                  </TouchableWithoutFeedback>
                 </View>
-              </View>
+              </TouchableWithoutFeedback>
             </Modal>
+
+
 
             {/* Modal for Editing Username */}
             <Modal visible={usernameModalVisible} animationType="fade" transparent={true}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Change Username</Text>
+              <TouchableWithoutFeedback onPress={() => setUsernameModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                  <TouchableWithoutFeedback>
+                    <View style={styles.modalContent}>
+                      <TouchableOpacity style={styles.closeIcon} onPress={() => setUsernameModalVisible(false)}>
+                        <Ionicons name="close" size={24} color="black" />
+                      </TouchableOpacity>
+                      <Text style={styles.modalTitle}>Change Username</Text>
+                      <View style={{ flexDirection: 'row', gap: 15 }}>
+                        <TextInput
+                          style={styles.input}
+                          value={username}
+                          onChangeText={setUsername}
+                          placeholder="Enter new username"
+                        />
 
-                  <TextInput
-                    style={styles.input}
-                    value={username}
-                    onChangeText={setUsername}
-                    placeholder="Enter new username"
-                  />
-                  <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
-                    <Button title="Save" onPress={() => setUsernameModalVisible(false)} />
+                        <TouchableOpacity style={styles.buttonSaveUsername} onPress={() => setUsernameModalVisible(false)}>
+                          <Text style={styles.buttonText}>Save</Text>
+                        </TouchableOpacity>
 
-                    <Button title="Cancel" onPress={() => setUsernameModalVisible(false)} color="red" />
-                  </View>
+                      </View>
+                    </View>
+                  </TouchableWithoutFeedback>
                 </View>
-              </View>
+              </TouchableWithoutFeedback>
             </Modal>
+
 
             {/* Chat Color Selection */}
             <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
@@ -326,24 +350,32 @@ export default function ProfileScreen({ navigation }) {
             </View>
             {/* Chat Color Modal */}
             <Modal visible={colorModalVisible} animationType="fade" transparent={true}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Choose Chat Color </Text>
-
-                  <FlatList
-                    data={COLORS}
-                    numColumns={4}
-                    keyExtractor={(item) => item.hex}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity onPress={() => selectChatColor(item.hex)} style={[styles.colorCircle, { backgroundColor: item.hex }]}>
-                        {chatColor === item.hex && <Text style={styles.selectedColor}>✔</Text>}
+              <TouchableWithoutFeedback onPress={() => setColorModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                  <TouchableWithoutFeedback>
+                    <View style={styles.modalContent}>
+                      <TouchableOpacity style={styles.closeIcon} onPress={() => setColorModalVisible(false)}>
+                        <Ionicons name="close" size={24} color="black" />
                       </TouchableOpacity>
-                    )}
-                  />
-                  <Button title="Cancel" onPress={() => setColorModalVisible(false)} color="red" />
+                      <Text style={styles.modalTitle}>Choose Chat Color </Text>
+
+                      <FlatList
+                        data={COLORS}
+                        numColumns={4}
+                        keyExtractor={(item) => item.hex}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity onPress={() => selectChatColor(item.hex)} style={[styles.colorCircle, { backgroundColor: item.hex }]}>
+                            {chatColor === item.hex && <Text style={styles.selectedColor}>✔</Text>}
+                          </TouchableOpacity>
+                        )}
+                      />
+
+                    </View>
+                  </TouchableWithoutFeedback>
                 </View>
-              </View>
+              </TouchableWithoutFeedback>
             </Modal>
+
 
 
             {/* Password Input */}
@@ -427,6 +459,7 @@ const styles = StyleSheet.create({
   infoTextUsername: {
     fontWeight: "bold",
     color: "#574E47",
+    maxWidth: 180,
     fontSize: 23,
   },
   profileImage: {
@@ -479,11 +512,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(72, 56, 38, 0.57)",
     borderWidth: 1,
     borderRadius: 5,
-
-    backgroundColor: "rgba(232, 230, 228, 0.4)",
+    backgroundColor: "rgb(244, 242, 241)",
     marginTop: 5,
     width: 160,
-    textAlign: "center",
+    paddingHorizontal: 10,
   },
   colorPreview: {
     height: 40,
@@ -507,7 +539,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "white",
-    padding: 20,
+    padding: 36,
     borderRadius: 10,
     alignItems: "center",
     width: "80%",
@@ -549,6 +581,18 @@ const styles = StyleSheet.create({
     width: 200,
     alignSelf: "center",
   },
+  buttonSaveUsername: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "#574E47",
+    maxWidth: 120,
+    alignSelf: "center",
+  },
 
   buttonContent: {
     flexDirection: "row",
@@ -586,5 +630,11 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 25,
     marginBottom: 40
+  },
+  closeIcon: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    zIndex: 10,
   },
 });
