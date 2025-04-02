@@ -394,9 +394,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgb(117, 102, 82)",
     marginVertical: 10,
     padding: 0,
-
-
-
   },
 
 });

@@ -187,8 +187,8 @@ export const createNewFinding = async (image, finding) => {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//FETCH USER PROFILE BY USERNAME (for ProfileScreen)
-// This function fetches the user profile by username and returns only the necessary fields
+//FETCH USER PROFILE BY USERNAME (for ChatScreen)
+// This function fetches returns only the necessary fields and not all the user data
 export const fetchUserProfileByUsername = async (clickedUsername) => {
   try {
     const token = await AsyncStorage.getItem("jwtToken");

@@ -33,6 +33,7 @@ export default function ProfileScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [colorModalVisible, setColorModalVisible] = useState(false);
   const [level, setLevel] = useState(1);
+  const [progress, setProgress] = useState(0);
   const [uniqueMushrooms, setUniqueMushrooms] = useState(0);
   const [usernameModalVisible, setUsernameModalVisible] = useState(false);
 
@@ -50,6 +51,7 @@ export default function ProfileScreen({ navigation }) {
         setProfilePicture(result.profilePicture);
         setChatColor(result.chatColor);
         setLevel(result.level || 1);
+        setProgress(result.progress || 0);
 
         // Assuming result.uniqueMushrooms is an array of mushroom IDs
         if (result.uniqueMushrooms && Array.isArray(result.uniqueMushrooms)) {
@@ -81,12 +83,7 @@ export default function ProfileScreen({ navigation }) {
     });
   };
 
-  // Function to calculate progress towards the next level
-  const calculateProgress = () => {
-    const mushroomsPerLevel = Math.max(1, Math.round(10 / (level * 0.1 + 1)));  // Slowing down level-up increment
-    const nextLevelThreshold = level * mushroomsPerLevel; // Number of mushrooms required for next level
-    return Math.min(uniqueMushrooms / nextLevelThreshold, 1);  // Progress capped at 100%
-  };
+
 
   // Check username availability
   const checkUsernameAvailability = async () => {
@@ -240,7 +237,7 @@ export default function ProfileScreen({ navigation }) {
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
 
-                  <Text onPress={() => setUsernameModalVisible(true)} style={styles.infoTextUsername} numberOfLines={1} adjustsFontSizeToFit>{username}</Text>
+                  <Text onPress={() => setUsernameModalVisible(true)} style={styles.infoTextUsername} numberOfLines={1} adjustsFontSizeToFit >{username}</Text>
                   <TouchableOpacity onPress={() => setUsernameModalVisible(true)}>
                     <View style={styles.editIconCirclePenicil}>
                       <Ionicons name="pencil" size={13} color="white" />
@@ -254,8 +251,8 @@ export default function ProfileScreen({ navigation }) {
                 </View>
 
                 <View style={{ flexDirection: 'row', gap: 2 }}>
-                  <Text style={styles.infoTextLabel}>Unique Mushrooms Found:</Text>
-                  <Text style={styles.infoTextValue}>{uniqueMushrooms}/10</Text>
+                  <Text style={styles.infoTextLabel}>Unique Mushrooms :</Text>
+                  <Text style={styles.infoTextValue}>{uniqueMushrooms}/100</Text>
                 </View>
               </View>
 
@@ -267,14 +264,14 @@ export default function ProfileScreen({ navigation }) {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text style={styles.progressText}>Level Progress</Text>
                 <Progress.Bar
-                  progress={calculateProgress()}
+                  progress={progress / 100}  // Convert progress to a value between 0 and 1
                   width={150}
                   height={20}
                   borderRadius={5}
                   color="#574E47"
                   unfilledColor="#d3d3d3"
                 />
-                <Text style={styles.progressPercentage}>{Math.round(calculateProgress() * 100)}%</Text>
+                <Text style={styles.progressPercentage}>{Math.round(progress)}%</Text>
               </View>
             </View>
             <View style={styles.hr} />
@@ -302,7 +299,6 @@ export default function ProfileScreen({ navigation }) {
                           </TouchableOpacity>
                         )}
                       />
-
                     </View>
                   </TouchableWithoutFeedback>
                 </View>
@@ -438,8 +434,9 @@ const styles = StyleSheet.create({
   introContainerBox: {
     backgroundColor: "rgba(255, 255, 255, 0.93)",
     borderRadius: 20,
-    padding: 20,
+    padding: 30,
     paddingBottom: 30,
+
   },
   introContainer: {
     flexDirection: 'row',
@@ -461,6 +458,7 @@ const styles = StyleSheet.create({
     color: "#574E47",
     maxWidth: 180,
     fontSize: 23,
+    marginRight: 7,
   },
   profileImage: {
     width: 90,
@@ -484,6 +482,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgb(176, 167, 156)",
+
   },
   editIconCirclePenicil: {
     position: "absolute",
@@ -495,6 +494,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+    marginRight: 10,
+
   },
   changeText: {
     textAlign: "center",
@@ -585,10 +586,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 30,
-
     alignItems: "center",
     justifyContent: "center",
-
     backgroundColor: "#574E47",
     maxWidth: 120,
     alignSelf: "center",
@@ -602,7 +601,6 @@ const styles = StyleSheet.create({
   },
 
   buttonDelete: {
-
     marginTop: 40,
     alignSelf: "center",
     paddingVertical: 12,
@@ -610,7 +608,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
-
   },
 
   buttonText: {
