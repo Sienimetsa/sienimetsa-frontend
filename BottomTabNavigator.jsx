@@ -35,26 +35,31 @@ export default function BottomTabNavigator({ navigation }) {
           borderTopWidth: 0, // Remove top border
           paddingTop: 10,
         },
-        headerStyle: { backgroundColor: '#574E47' },
+        headerStyle: {
+          backgroundColor: '#574E47',
+          shadowColor: 'transparent', // Remove shadow on iOS
+          elevation: 0, // Remove shadow on Android
+          borderBottomWidth: 0, // Remove bottom border
+        },
         headerTintColor: 'white',
         headerTitleStyle: { fontFamily: 'Nunito-Bold' },
       })}
     >
       <Tab.Screen name="Chat" component={ChatScreen} />
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen} 
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
         options={{
-          headerRight: () => <LogoutButton navigation={navigation} />, 
-        }} 
+          headerRight: () => <LogoutButton navigation={navigation} />,
+        }}
       />
       <Tab.Screen name="Library" component={LibraryStackNavigator} />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
         options={{
-          headerRight: () => <LogoutButton navigation={navigation} />, 
-        }} 
+          headerRight: () => <LogoutButton navigation={navigation} />,
+        }}
       />
     </Tab.Navigator>
   );

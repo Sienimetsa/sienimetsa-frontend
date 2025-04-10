@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, Button, Alert, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, Switch, ImageBackground } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import { createNewFinding } from '../Components/Fetch';
 import * as Location from 'expo-location';
 import Toast from "react-native-toast-message";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function CreateFindingScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { photoUri, mushroomId, image, mushroomName } = route.params || {};
+  const { photoUri, mushroomId, image, mushroomCommonName, mushroomLatinName } = route.params || {};
   const [findingNotes, setFindingNotes] = useState('');
   const [findingCity, setFindingCity] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,10 +19,9 @@ export default function CreateFindingScreen() {
   const [locationErrorMsg, setLocationErrorMsg] = useState(null);
   const [useCurrentLocation, setUseCurrentLocation] = useState(true);
 
-  // Show toast message function
   const showToast = (type, message) => {
     Toast.show({
-      type: type, // 'success' or 'error'
+      type: type,
       text1: message,
       position: "bottom",
       visibilityTime: 3000,
@@ -29,7 +29,6 @@ export default function CreateFindingScreen() {
     });
   };
 
-  // Get current location when component mounts
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -42,7 +41,6 @@ export default function CreateFindingScreen() {
       try {
         let location = await Location.getCurrentPositionAsync({});
         setLocation(location);
-        // Try to get city name from coordinates
         const reverseGeocode = await Location.reverseGeocodeAsync({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude
@@ -60,7 +58,6 @@ export default function CreateFindingScreen() {
     })();
   }, []);
 
-  // Function to upload the image to backend
   const saveFinding = async () => {
     setIsLoading(true);
 
@@ -82,19 +79,17 @@ export default function CreateFindingScreen() {
         return;
       }
 
-      const now = new Date().toISOString().split('.')[0]; // "yyyy-mm-ddTh:min:sec"
+      const now = new Date().toISOString().split('.')[0];
 
-      // Create finding object
       const finding = {
         notes: findingNotes || "",
         city: findingCity || "Unknown",
         f_time: now,
-        imageURL: "", // Will be set by backend
+        imageURL: "",
         appuser: { u_id: user_id },
         mushroom: { m_id: mushroomIdNum }
       };
 
-      // Add coordinates if available
       if (useCurrentLocation && location) {
         const lat = location.coords.latitude;
         const lng = location.coords.longitude;
@@ -121,152 +116,211 @@ export default function CreateFindingScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Create New Finding</Text>
-
-        {photoUri && (
-          <Image source={{ uri: photoUri }} style={styles.photo} />
-        )}
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.mushroomName}>
-            Selected mushroom: {mushroomName || "None selected"}
-          </Text>
+    <ImageBackground
+      source={require('../assets/Backgrounds/sieni-bg.jpg')}
+      style={styles.container}
+      resizeMode="cover"
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Create New Finding</Text>
         </View>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.label}>Notes</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Add notes about your finding..."
-            multiline={true}
-            numberOfLines={4}
-            value={findingNotes}
-            onChangeText={setFindingNotes}
-          />
-
-          <Text style={styles.label}>Location</Text>
-          {locationErrorMsg ? (
-            <Text style={styles.errorText}>{locationErrorMsg}</Text>
-          ) : null}
-
-          <View style={styles.locationContainer}>
-            <View style={styles.switchContainer}>
-              <Text>Use current coordinates?</Text>
-              <Switch
-                value={useCurrentLocation}
-                onValueChange={setUseCurrentLocation}
-              />
+        <View style={styles.contentContainer}>
+          {photoUri && (
+            <View style={styles.photoContainer}>
+              <Image source={{ uri: photoUri }} style={styles.photo} />
             </View>
+          )}
 
-            {useCurrentLocation && location ? (
-              <View style={styles.locationInfo}>
-                <Text>{location.coords.latitude.toFixed(6)}, {location.coords.longitude.toFixed(6)}</Text>
+          <View style={styles.infoContainer}>
+            <Text style={styles.mushroomCommonName}>
+              {mushroomCommonName || "None selected"}
+            </Text>
+            <Text style={styles.mushroomLatinName}>
+              {mushroomLatinName || "None selected"}
+            </Text>
+          </View>
+
+          <View style={styles.formContainer}>
+            <Text style={styles.label}>Notes</Text>
+            <TextInput
+              style={[
+                styles.input,
+                styles.notesInput,
+                findingNotes.trim() === '' && { height: 100 }
+              ]}
+              placeholder="Add notes about your finding..."
+              multiline={true}
+              numberOfLines={findingNotes.trim() ? 4 : 0}
+              value={findingNotes}
+              onChangeText={setFindingNotes}
+              scrollEnabled={findingNotes.trim() !== ''}
+            />
+
+            <Text style={styles.label}>Location</Text>
+            {locationErrorMsg ? (
+              <View style={styles.errorContainer}>
+                <Ionicons name="alert-circle-outline" size={24} color="#ff5762" />
+                <Text style={styles.errorText}>{locationErrorMsg}</Text>
               </View>
-            ) : (
-              <TextInput
-                style={styles.input}
-                placeholder="City or location name"
-                value={findingCity}
-                onChangeText={setFindingCity}
-                editable={!useCurrentLocation}
-              />
-            )}
+            ) : null}
+
+            <View style={styles.locationContainer}>
+              <View style={styles.switchContainer}>
+                <Text style={styles.switchLabel}>Use current coordinates</Text>
+                <Switch
+                  value={useCurrentLocation}
+                  onValueChange={setUseCurrentLocation}
+                  trackColor={{ false: "#D7C5B780", true: "#574E4780" }}
+                  thumbColor={useCurrentLocation ? "#574E47" : "#f4f3f4"}
+                />
+              </View>
+
+              {useCurrentLocation && location ? (
+                <View style={styles.locationInfo}>
+                  <Ionicons name="location" size={18} color="#574E47" />
+                  <Text style={styles.locationText}>
+                    {location.coords.latitude.toFixed(6)}, {location.coords.longitude.toFixed(6)}
+                  </Text>
+                </View>
+              ) : (
+                <TextInput
+                  style={styles.input}
+                  placeholder="City or location name"
+                  value={findingCity}
+                  onChangeText={setFindingCity}
+                  editable={!useCurrentLocation}
+                />
+              )}
+            </View>
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.saveButton, isLoading && styles.disabledButton]}
+              onPress={saveFinding}
+              disabled={isLoading}
+            >
+              <Text style={styles.saveButtonText}>{isLoading ? "Saving..." : "Save Finding"}</Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        <View style={styles.buttonContainer}>
-          <Button
-            title="Cancel"
-            onPress={() => navigation.goBack()}
-            color="#888"
-          />
-          <Button
-            title={isLoading ? "Saving..." : "Save Finding"}
-            onPress={saveFinding}
-            disabled={isLoading}
-            color="#4CAF50"
-          />
-        </View>
         <Toast />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-  },
   container: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  titleContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.93)",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 15,
+    paddingBottom: 5,
+    paddingHorizontal: 25,
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginTop: 20,
+    width: '70%',
+  },
+  contentContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.93)",
+    borderRadius: 20,
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#574E47',
     textAlign: 'center',
+    fontFamily: 'Nunito-Bold',
+  },
+  photoContainer: {
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginBottom: 15,
+    borderWidth: 2,
+    borderColor: '#D7C5B7',
   },
   photo: {
     width: '100%',
     height: 250,
-    borderRadius: 10,
-    marginBottom: 20,
-    alignSelf: 'center',
+    borderRadius: 8,
   },
   infoContainer: {
-    backgroundColor: '#e6f7ed',
+    backgroundColor: '#D7C5B780',
     padding: 15,
     borderRadius: 8,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#b3dbbf',
+    borderWidth: 2,
+    borderColor: '#D7C5B7',
   },
-  mushroomName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2e7d32',
+  mushroomCommonName: {
+    textAlign: 'center',
+    fontSize: 22,
+    color: '#574E47',
+    fontFamily: 'Nunito-Bold',
+    paddingBottom: 5,
+  },
+  mushroomLatinName: {
+    textAlign: 'center',
+    fontSize: 15,
+    color: '#574E47',
+    fontFamily: 'Nunito-Italic',
   },
   formContainer: {
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#444',
+    fontFamily: 'Nunito-Bold',
+    marginBottom: 8,
+    color: '#574E47',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#D7C5B7',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     marginBottom: 15,
     textAlignVertical: 'top',
+    fontFamily: 'Nunito-Medium',
   },
-  buttonContainer: {
+  notesInput: {
+    minHeight: 100,
+  },
+  errorContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  successText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2e7d32',
-    textAlign: 'center',
-    marginTop: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: 'rgba(255, 87, 98, 0.1)',
+    borderRadius: 8,
   },
   errorText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#d32f2f',
-    textAlign: 'center',
-    marginTop: 10,
+    fontSize: 14,
+    fontFamily: 'Nunito-Bold',
+    color: '#ff5762',
+    marginLeft: 8,
   },
   locationContainer: {
     marginBottom: 15,
@@ -275,13 +329,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
+  },
+  switchLabel: {
+    fontFamily: 'Nunito-Medium',
+    fontSize: 16,
+    color: '#574E47',
   },
   locationInfo: {
-    backgroundColor: '#e6f7ed',
-    padding: 10,
+    backgroundColor: '#D7C5B780',
+    padding: 15,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#b3dbbf',
+    borderColor: '#D7C5B7',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationText: {
+    fontFamily: 'Nunito-Medium',
+    fontSize: 16,
+    marginLeft: 10,
+    color: '#574E47',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+  },
+  cancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#D7C5B7",
+    width: 120,
+  },
+  cancelButtonText: {
+    color: '#574E47',
+    fontFamily: 'Nunito-Bold',
+  },
+  saveButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#574E47",
+    width: 160,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontFamily: 'Nunito-Bold',
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });

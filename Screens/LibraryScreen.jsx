@@ -1,10 +1,11 @@
-import { Button, FlatList, Image, ImageBackground, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
+import { FlatList, Image, ImageBackground, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { fetchMushroomsData, fetchUserFindings } from '../Components/Fetch';
 import { Modal } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import mushroomPictureMap from '../Components/MushroomPictureMap';
 import { Ionicons } from "@expo/vector-icons";
+import ToxicityIndicator from "../Components/ToxicityIndicator";
 
 export default function LibraryScreen({ navigation }) {
   const [mushroomData, setMushroomData] = useState([]);
@@ -54,8 +55,6 @@ export default function LibraryScreen({ navigation }) {
   // Open mushroom detail modal and pass item data
   const openMushroomDetailModal = (item) => {
     setSelectedMushroom(item);
-    console.log("Selected mushroom:", item.mname);
-    console.log("Image available:", mushroomPictureMap[item.mname] ? "Yes" : "No");
     setModalVisible(true)
   };
 
@@ -71,7 +70,7 @@ export default function LibraryScreen({ navigation }) {
             <Text style={styles.listItemSubHeader}>{item.mname}</Text>
             <View style={styles.listItemToxicityContainer}>
               <Text style={styles.listItemToxicity}>Toxicity Level: </Text>
-              {toxicityIcons(item.toxicity_level)}
+              <ToxicityIndicator toxicity_level={item.toxicity_level} />
             </View>
           </View>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -93,11 +92,19 @@ export default function LibraryScreen({ navigation }) {
   }
 
   // filter mushroom list based on search text
-  const filteredMushroomList = mushroomData.filter(item =>
-    item.mname.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.toxicity_level.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.cmname.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredMushroomList = mushroomData.filter(item => {
+    const searchLower = searchText.toLowerCase().trim();
+
+    // Special case for toxicity level exact matches
+    if (searchLower === "low" || searchLower === "medium" || searchLower === "high") {
+      return item.toxicity_level.toLowerCase() === searchLower;
+    }
+
+    // Regular search across all fields
+    return item.mname.toLowerCase().includes(searchLower) ||
+      item.toxicity_level.toLowerCase().includes(searchLower) ||
+      item.cmname.toLowerCase().includes(searchLower);
+  });
 
   const toggleFilterFound = () => {
     if (!toggleFilter) {
@@ -125,45 +132,13 @@ export default function LibraryScreen({ navigation }) {
     return findingsData.filter(finding => finding.mushroom.m_id === mushroomId).length;
   };
 
-  const toxicityIcons = (toxicity_level) => {
-    if (toxicity_level.toLowerCase() === 'low') {
-      return (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 10, height: 8, borderRadius: 5, backgroundColor: '#6af177', marginRight: 2 }} />
-          <View style={{ width: 10, height: 8, borderRadius: 5, borderWidth: 1, borderColor: '#6af177', marginRight: 2 }} />
-          <View style={{ width: 10, height: 8, borderRadius: 5, borderWidth: 1, borderColor: '#6af177' }} />
-        </View>
-      )
-    }
-    if (toxicity_level.toLowerCase() === 'medium') {
-      return (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 10, height: 8, borderRadius: 5, backgroundColor: '#ffe74d', marginRight: 2 }} />
-          <View style={{ width: 10, height: 8, borderRadius: 5, backgroundColor: '#ffe74d', marginRight: 2 }} />
-          <View style={{ width: 10, height: 8, borderRadius: 5, borderWidth: 1, borderColor: '#ffe74d' }} />
-        </View>
-      )
-    }
-    if (toxicity_level.toLowerCase() === 'high') {
-      return (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 10, height: 8, borderRadius: 5, backgroundColor: '#ff5762', marginRight: 2 }} />
-          <View style={{ width: 10, height: 8, borderRadius: 5, backgroundColor: '#ff5762', marginRight: 2 }} />
-          <View style={{ width: 10, height: 8, borderRadius: 5, backgroundColor: '#ff5762' }} />
-        </View>
-      )
-    }
-  }
-
   return (
     <ImageBackground
-      source={require('../assets/Backgrounds/sieni-bg.jpg')} // Adjust the path if needed
+      source={require('../assets/Backgrounds/sieni-bg.jpg')}
       style={styles.container}
-      resizeMode="cover" // Optional: Adjust how the image scales
+      resizeMode="cover"
     >
-
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-
         <View style={styles.container}>
 
           {/* FILTER BLOCK */}
@@ -186,7 +161,7 @@ export default function LibraryScreen({ navigation }) {
             </View>
 
             {/* TOGGLE BUTTON */}
-            <View style={{}}>
+            <View>
               <TouchableOpacity
                 style={styles.toggleButton}
                 onPress={() => toggleFilterFound()}>
@@ -199,7 +174,6 @@ export default function LibraryScreen({ navigation }) {
           </View>
 
           <View style={styles.introContainerBox}>
-
             {/* FLATLIST BLOCK */}
             {filteredMushroomList.length > 0 ? (
               <FlatList
@@ -209,13 +183,10 @@ export default function LibraryScreen({ navigation }) {
               />
             ) : (
               <View style={styles.emptyStateContainer}>
-
                 <Ionicons name="leaf-outline" size={50} color="#574E47" style={{ marginBottom: 20 }} />
-
                 <Text style={styles.emptyStateText}>
                   {toggleFilter ? "No found mushrooms yet" : "No matching mushrooms"}
                 </Text>
-
                 {toggleFilter && (
                   <Text style={styles.emptyStateSubtext}>
                     Explore and add mushrooms to your collection!
@@ -240,7 +211,7 @@ export default function LibraryScreen({ navigation }) {
 
                       <View style={styles.modalRowContainer}>
                         <Text style={styles.modalSubHeader}>Toxicity Level: </Text>
-                        {toxicityIcons(selectedMushroom.toxicity_level)}
+                        <ToxicityIndicator toxicity_level={selectedMushroom.toxicity_level} />
                       </View>
 
                       <View style={styles.modalRowContainer}>
@@ -285,12 +256,12 @@ export default function LibraryScreen({ navigation }) {
                     </View>
                   </TouchableWithoutFeedback>
                 </View>
-              </TouchableWithoutFeedback >
-            </Modal >
-          </View >
-        </View >
-      </TouchableWithoutFeedback >
-    </ImageBackground >
+              </TouchableWithoutFeedback>
+            </Modal>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </ImageBackground>
   )
 }
 
