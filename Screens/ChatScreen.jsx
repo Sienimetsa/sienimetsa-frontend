@@ -1,29 +1,32 @@
-
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ImageBackground, Modal, Button, Image, TouchableWithoutFeedback } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ImageBackground, Modal, Image, TouchableWithoutFeedback } from "react-native";
 import { Client } from "@stomp/stompjs";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchCurrentUser, fetchUserProfileByUsername } from "../Components/Fetch.js";
+import { fetchCurrentUser, fetchUserProfileByUsername, fetchUserFindings } from "../Components/Fetch.js";
 import { API_SOCKET_URL } from "@env";
+import { API_BASE_URL } from '@env';
 import { Keyboard } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
+import MushroomIcon from "../assets/chaticons/mushroomIcon.png"
+import ToxicityIndicator from "../Components/ToxicityIndicator";
 const ChatScreen = () => {
- 
+
   const { user, setUser } = useContext(AuthContext); // Retrieve user information from AuthContext
   const [messages, setMessages] = useState([]); // Stores chat messages
   const [input, setInput] = useState(""); // Stores input message
   const [username, setUsername] = useState("Anonymous"); // Default username
   const [chatColor, setChatColor] = useState("#000"); // Default text color for messages
-  const [modalVisible, setModalVisible] = useState(false);
   const [userProfile, setUserProfile] = useState({}); // Store user profile
   const [uniqueMushrooms, setUniqueMushrooms] = useState(0);
-  // Refs
   const clientRef = useRef(null); // Ref for WebSocket client
   const flatListRef = useRef(null); // Ref for FlatList to enable auto-scrolling
+  const [foundMushrooms, setFoundMushrooms] = useState([]);
+  const [selectedFinding, setSelectedFinding] = useState(null); // Selected finding details
+  const [findingPhotos, setFindingPhotos] = useState([]); // Photos of findings for a mushroom
+  const [activeModal, setActiveModal] = useState(null); // null | "profile" | "findings" | "mushroom" | "findingDetails"
 
 
   // Fetch user details when navigating to ChatScreen
@@ -60,10 +63,14 @@ const ChatScreen = () => {
         appendMissingNULLonIncoming: true, // Helps prevent parsing issues
         onConnect: () => {
           console.log("WebSocket connected!");
-          client.subscribe("/topic/publicChat", (message) => {
+          client.subscribe("/topic/publicChat", async (message) => {
             console.log("Received:", message.body);
             const parsedMessage = JSON.parse(message.body);
-            setMessages((prev) => [...prev, parsedMessage]);
+            const currentFindings = await fetchUserFindings();
+            const uniquePhotos = extractUniqueFoundMushrooms(currentFindings);
+
+            parsedMessage.findingPhotos = uniquePhotos; // Attach to message
+            addMessage(parsedMessage); // Use the new addMessage function
           });
         },
         onStompError: (frame) => console.error("STOMP error:", frame.headers["message"]),
@@ -76,45 +83,50 @@ const ChatScreen = () => {
     };
 
     connectWebSocket();
-    // Cleanup function to close WebSocket connection when component unmounts
+
     return () => {
       if (clientRef.current) {
         clientRef.current.deactivate();
         console.log("WebSocket connection closed.");
       }
     };
-  }, []);
-
+  }, []); // Dependency array ensures this runs only once
 
   // Function to send messages via WebSocket
   const sendMessage = () => {
     if (clientRef.current && clientRef.current.connected) {
+      // Validate selectedFinding and ensure it contains valid data
+      const mushroomTag = selectedFinding && selectedFinding.mushroomName
+        ? `[mushroom:${selectedFinding.mushroomName}|${selectedFinding.photoUri || "NoImage"}|${selectedFinding.mname || "NoDescription"}|${selectedFinding.toxicity_level || "NoDescription"}|${selectedFinding.foundBy}]`
+        : "";
+      // Remove the first mention of the mushroom name from the input if a finding is selected
+      let messageInput = input.trim();
+      if (selectedFinding && selectedFinding.mushroomName) {
+        const mushroomNameRegex = new RegExp(`\\b${selectedFinding.mushroomName}\\b`, "i");
+        messageInput = messageInput.replace(mushroomNameRegex, "").trim();
+      }
+      // Construct the final message text
+      const messageText = `${messageInput} ${mushroomTag}`.trim();
+
       clientRef.current.publish({
         destination: "/app/send",
         body: JSON.stringify({
-          text: input,
+          text: messageText, // Include the cleaned input and the mushroom tag
           username: username, // Send username
           chatColor: chatColor, // Send chat color
           timestamp: new Date().toISOString(),
         }),
       });
+
       setInput(""); // Clear input field after sending message
+      setSelectedFinding(null); // Clear the selected finding
       Keyboard.dismiss(); // Hide the keyboard
     } else {
       console.warn("WebSocket not connected.");
     }
   };
 
-  // Scroll to the latest message when new messages arrive
   useEffect(() => {
-    // Scroll to the latest message when messages update
-    if (flatListRef.current) {
-      setTimeout(() => {
-        flatListRef.current.scrollToEnd({ animated: true });
-      }, 100);
-    }
-
-    // Keyboard event listeners
     const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
@@ -125,16 +137,14 @@ const ChatScreen = () => {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
+
     });
 
-    // Cleanup function
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
-  }, [messages]); // Dependency array includes messages
-
-
+  }, [messages]);
 
   // function to fetch user profile data
   const fetchUserProfileData = async (clickedUsername) => {
@@ -142,9 +152,7 @@ const ChatScreen = () => {
       const profileData = await fetchUserProfileByUsername(clickedUsername);
 
       if (profileData && !profileData.error) {
-        // Assuming result.uniqueMushrooms is an array of mushroom IDs
         if (profileData.uniqueMushrooms && Array.isArray(profileData.uniqueMushrooms)) {
-          // Use a Set to get unique mushrooms from the array
           const uniqueMushroomsSet = new Set(profileData.uniqueMushrooms);
           setUniqueMushrooms(uniqueMushroomsSet.size);  // Set size gives the number of unique mushrooms
         } else {
@@ -152,7 +160,7 @@ const ChatScreen = () => {
         }
 
         setUserProfile(profileData);
-        setModalVisible(true); // Show modal with user profile
+        setActiveModal('profile'); // Show modal with user profile
       } else {
         console.error("Profile not found");
       }
@@ -161,133 +169,360 @@ const ChatScreen = () => {
     }
   };
 
-
   // Function to handle username click
   const handleUsernameClick = (username) => {
     fetchUserProfileData(username);
   };
-  return (
 
+  const extractUniqueFoundMushrooms = (findings) => {
+    const unique = {};
+    findings.forEach((finding) => {
+      const mushroom = finding.mushroom;
+      if (!unique[mushroom.m_id]) {
+        unique[mushroom.m_id] = mushroom;
+      }
+    });
+    return Object.values(unique);
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchFindings = async () => {
+        const data = await fetchUserFindings();
+        if (data && !data.error) {
+          const uniqueMushrooms = extractUniqueFoundMushrooms(data);
+          setFoundMushrooms(uniqueMushrooms);
+        }
+      };
+      fetchFindings();
+    }, [])
+  );
+
+  // Function to fetch findings for a selected mushroom
+  const fetchFindingsForMushroom = async (mushroomId) => {
+    const findings = await fetchUserFindings();
+    if (findings && !findings.error) {
+      const filteredFindings = findings.filter(f => f.mushroom.m_id === mushroomId);
+      setFindingPhotos(filteredFindings);
+      setActiveModal('findingDetails');
+    }
+  };
+
+  // Function to handle finding selection
+  const handleFindingSelection = (finding) => {
+    if (!finding || !finding.mushroom || !finding.mushroom.cmname) {
+      console.warn("Invalid finding selected:", finding);
+      return;
+    }
+    setInput((prevInput) => {
+      // Check if the mushroom name already exists in the input
+      if (prevInput.includes(finding.mushroom.cmname)) {
+        return prevInput;
+      }
+
+      return `${prevInput} ${finding.mushroom.cmname}`.trim();
+    });
+
+    setSelectedFinding({
+      mushroomName: finding.mushroom.cmname,
+      photoUri: finding.imageURL || null,
+      mname: finding.mushroom.mname || "N/A",
+      toxicity_level: finding.mushroom.toxicity_level || "N/A",
+      foundBy: finding.appuser.username || "Anonymous",
+
+    });
+    setActiveModal(null);
+  };
+
+  const handleFindingClick = (mushroomDetails) => {
+    try {
+      const { mushroomName, photoUri, mname, toxicity_level, foundBy } = mushroomDetails;
+
+      // checker to see if photoUri is a valid URL or a local file path
+      const formattedPhotoUri = photoUri && !photoUri.startsWith("http")
+        ? `${API_BASE_URL}/images/${photoUri}`
+        : photoUri;
+
+      setSelectedFinding({
+        mushroomName: mushroomName || "Unknown Mushroom",
+        photoUri: formattedPhotoUri !== "NoImage" ? formattedPhotoUri : null,
+        mname: mname || "N/A",
+        toxicity_level: toxicity_level || "N/A",
+        foundBy: mushroomDetails.foundBy || "Anonymous",
+      });
+
+      setActiveModal('findings');
+    } catch (error) {
+      console.error("Error in handleFindingClick:", error);
+    }
+  };
+
+  // FUNCTION TO SHOW FINDING DETAILS IN MODAL
+  const showFindingDetails = (finding) => {
+    setSelectedFinding(finding);
+    setActiveModal('findings');
+  };
+
+  const renderMessageSegments = (item) => {
+    const segments = [];
+    const mushroomRegex = /\[mushroom:(.*?)\|(.*?)\|(.*?)\|(.*?)\|(.*?)\]/g;
+
+    let lastIndex = 0;
+
+    // Parses the text for mushroom tags
+    item.text.replace(mushroomRegex, (match, mushroomName, photoUri, mname, toxicity_level, foundBy, offset) => {
+      // Add plain text before the mushroom tag
+      if (offset > lastIndex) {
+        segments.push({ text: item.text.slice(lastIndex, offset), isLink: false });
+      }
+
+      // Add the mushroom tag as a clickable link
+      segments.push({
+        text: mushroomName,
+        isLink: true,
+        mushroomDetails: { mushroomName, photoUri, mname, toxicity_level, foundBy },
+      });
+      lastIndex = offset + match.length;
+    });
+
+    // Add remaining plain text after the last mushroom tag
+    if (lastIndex < item.text.length) {
+      segments.push({ text: item.text.slice(lastIndex), isLink: false });
+    }
+
+    // Map over segments and render them
+    return segments.map((segment, index) => {
+      if (segment.isLink) {
+        return (
+          <TouchableOpacity
+            key={`${item.timestamp}-link-${index}`}
+            onPress={() => handleFindingClick(segment.mushroomDetails)}
+          >
+            <Text
+              style={[
+                styles.linkText]}>
+              {segment.text}
+            </Text>
+          </TouchableOpacity>
+        );
+      }
+
+      return (
+        <Text key={`${item.timestamp}-text-${index}`} style={styles.messageText}>
+          {segment.text}
+        </Text>
+      );
+    });
+  };
+
+  // UPDATE UI WHEN 100 MESSAGES ARE REACHED
+  const addMessage = (newMessage) => {
+    setMessages((prevMessages) => {
+      const updatedMessages = [...prevMessages, newMessage];
+      if (updatedMessages.length > 100) {
+        updatedMessages.shift();
+      }
+      return updatedMessages;
+    });
+  };
+
+  return (
     <ImageBackground
       source={require('../assets/Backgrounds/sieni-bg.jpg')}
       style={styles.container}
       resizeMode="cover"
     >
-
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 70} // Adjust offset
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 70}
       >
-        {/* Profile Modal */}
+        {/* CHAT FLATLIST*/}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item, index) => index.toString()}
+          initialNumToRender={20}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => {
+            const isOwnMessage = item.username === username;
+            return (
+              <View
+                style={[styles.messageContainer, { backgroundColor: item.chatColor || "#000", alignSelf: isOwnMessage ? "flex-end" : "flex-start", },]}>
+                <TouchableOpacity onPress={() => handleUsernameClick(item.username)}>
+                  <Text style={styles.username}>{item.username}</Text>
+                </TouchableOpacity>
+
+                <View style={styles.messageTextContainer}>
+                  {renderMessageSegments(item)}
+                </View>
+              </View>
+            );
+          }}
+        />
+
+            {/* CHAT INPUT */}
+          <View style={[styles.inputContainerBox]}>
+            {/* Mushroom Icon */}
+            <TouchableOpacity onPress={() => setActiveModal('mushroom')}>
+              <Image source={MushroomIcon} style={{ width: 35, height: 35 }} />
+            </TouchableOpacity>
+
+            {/* Input Text */}
+            <TextInput
+              value={input}
+              onChangeText={setInput}
+              placeholder="Type a message"
+              style={styles.input}
+              onFocus={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            />
+
+            {/* Send Button */}
+            <TouchableOpacity onPress={sendMessage} style={styles.sendButtonCircle}>
+              <Ionicons name="send" size={22} color="#fff" paddingLeft={3} />
+            </TouchableOpacity>
+          </View>
+
+  
+      {/* MODALS-> PROFILE, FINDINGS, MUSHROOM AND FINDING DETAILS */}
         <Modal
-          visible={modalVisible}
+          visible={activeModal !== null}
           animationType="fade"
           transparent={true}
-          onRequestClose={() => setModalVisible(false)} 
+          onRequestClose={() => setActiveModal(null)}
         >
-          <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <TouchableWithoutFeedback onPress={() => setActiveModal(null)}>
             <View style={styles.modalContainer}>
-              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-
-                <View style={styles.modalContent}>
-                  <TouchableOpacity style={styles.closeIcon} onPress={() => setModalVisible(false)}>
-                    <Ionicons name="close" size={24} color="black" />
-                  </TouchableOpacity>
-
-
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
-                    {userProfile.profilePicture && (
-                      <Image
-                        source={profilePictureMap[userProfile.profilePicture]} 
-                        style={styles.profileImage}
-                      />
-                    )}
-
-                    <View style={{ flexDirection: 'column', alignItems: 'end', gap: 2 }}>
-                      <Text style={styles.profileUsername} numberOfLines={1} adjustsFontSizeToFit>
-                        {userProfile.username}
-                      </Text>
-
-                      <View style={styles.hr} />
-                      <View style={{ flexDirection: 'row', gap: 2 }}>
-                        <Text style={styles.infoTextLabel}>Level:</Text>
-                        <Text style={styles.infoTextValue}>{userProfile.level}</Text>
+                {activeModal === "profile" && (
+                  <View style={styles.modalContainer}>
+                    <View style={styles.profileModalContent}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                        {userProfile.profilePicture && (
+                          <Image
+                            source={profilePictureMap[userProfile.profilePicture]}
+                            style={styles.profileImage}
+                          />
+                        )}
+                        <View style={{ flexDirection: 'column', alignItems: 'end', gap: 2 }}>
+                          <Text style={styles.profileUsername} numberOfLines={1} adjustsFontSizeToFit>
+                            {userProfile.username}
+                          </Text>
+                          <View style={styles.hr} />
+                          <View style={{ flexDirection: 'row', gap: 2 }}>
+                            <Text style={styles.infoTextLabel}>Level:</Text>
+                            <Text style={styles.infoTextValue}>{userProfile.level}</Text>
+                          </View>
+                          <View style={{ flexDirection: 'row', gap: 2 }}>
+                            <Text style={styles.infoTextLabel}>Unique Mushrooms:</Text>
+                            <Text style={styles.infoTextValue}>{uniqueMushrooms}</Text>
+                          </View>
+                        </View>
                       </View>
-
-                      <View style={{ flexDirection: 'row', gap: 2 }}>
-                        <Text style={styles.infoTextLabel}>Unique Mushrooms:</Text>
-                        <Text style={styles.infoTextValue}>{uniqueMushrooms}</Text>
-                      </View>
+                      <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
+                        <Text style={styles.closeButtonText}>Close</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
+                )}
 
-                </View>
-              </TouchableWithoutFeedback>
+                {activeModal === "findings" && (
+                  <View style={styles.modalContainer}>
+                    <View style={styles.findingModalContent}>
+                      <View style={styles.modalRowContainer}>
+                        <Text style={styles.modalSubHeader}>Found by: </Text>
+                        <Text>{selectedFinding?.foundBy || "N/A"}</Text>
+                      </View>
+                      {selectedFinding?.photoUri ? (<Image source={{ uri: selectedFinding.photoUri }} style={styles.findingPhoto} />)
+                        : (<Text>No image available</Text>
+                        )}
+                      <Text style={styles.modalTitle}>{selectedFinding?.mname || 'Unknown Mushroom'}</Text>
+                      <Text>{selectedFinding?.mushroomName || "N/A"}</Text>
+                      <View style={styles.modalRowContainer}>
+                        <Text style={styles.modalSubHeader}>Toxicity level: </Text>
+                        <ToxicityIndicator toxicity_level={selectedFinding?.toxicity_level} />
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setActiveModal(null);
+                          setSelectedFinding(null);
+                        }} style={styles.closeButton}>
+                        <Text style={styles.closeButtonText}>Close</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+
+                {activeModal === "mushroom" && (
+                  <View style={styles.modalContainer}>
+
+                    <View style={styles.modalContent}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingBottom: 16, paddingTop: 16 }}>
+                        <Text style={styles.modalTitle}>Select a Mushroom</Text>
+                        <Image source={MushroomIcon} style={{ width: 30, height: 30 }} />
+                      </View>
+                      <FlatList
+                        data={foundMushrooms}
+                        keyExtractor={(item) => item.m_id.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity onPress={() => {
+                            fetchFindingsForMushroom(item.m_id);
+                            setActiveModal(false);
+                          }}>
+                            <Text style={styles.mushroomName}>{item.cmname}</Text>
+                            <View style={styles.hr} />
+                          </TouchableOpacity>
+                        )}
+                      />
+                      <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
+                        <Text style={styles.closeButtonText}>Close</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+
+                {activeModal === "findingDetails" && (
+                  <View style={styles.modalContainer}>
+
+                    <View style={styles.selectFindingmodalContent}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingBottom: 16, paddingTop: 10 }}>
+                        <Text style={styles.modalTitle}>Select a Finding</Text>
+                        <Ionicons name="search" size={30} color="#574E47" />
+                      </View>
+
+                      <FlatList
+                        data={findingPhotos}
+                        keyExtractor={(item) => item.f_Id.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity onPress={() => handleFindingSelection(item)}>
+                            <Image
+                              source={{ uri: `${API_BASE_URL}/images/${item.imageURL}` }}
+                              style={styles.thumbnail}
+                            />
+                          </TouchableOpacity>
+                        )}
+                        numColumns={2}
+                      />
+                      <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
+                        <Text style={styles.closeButtonText}>Close</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
             </View>
           </TouchableWithoutFeedback>
         </Modal>
-
-
-
-        <View style={{ flex: 1 }}>
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item, index) => index.toString()}
-            initialNumToRender={20} 
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })} // Auto-scroll on size change
-            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })} // Scroll when FlatList loads
-            keyboardShouldPersistTaps="handled" // Dismiss keyboard when tapping outside input
-            renderItem={({ item }) => {
-              const isOwnMessage = item.username === username;
-              return (
-                <View
-                  style={[
-                    styles.messageContainer,
-                    {
-                      backgroundColor: item.chatColor || "#000",
-                      alignSelf: isOwnMessage ? "flex-end" : "flex-start",
-                    },
-                  ]}
-                >
-                  <TouchableOpacity onPress={() => handleUsernameClick(item.username)}>
-                    <Text style={styles.username}>{item.username}</Text>
-                  </TouchableOpacity>
-
-                  <Text style={styles.messageText} numberOfLines={10} adjustsFontSizeToFit>{item.text}</Text>
-                </View>
-              );
-            }}
-          />
-        </View>
-
-        {/* Input Box */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            value={input}
-            onChangeText={setInput}
-            placeholder="Type a message"
-            style={styles.input}
-            onFocus={() => flatListRef.current?.scrollToEnd({ animated: true })} // Scroll to bottom on focus
-          />
-          <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-            <Text style={styles.sendButtonText}>Send</Text>
-          </TouchableOpacity>
-        </View>
-
-
       </KeyboardAvoidingView>
     </ImageBackground>
 
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 0,  
+    paddingTop: 0,
     paddingLeft: 10,
     paddingRight: 10,
     paddingBottom: 10,
@@ -300,11 +535,9 @@ const styles = StyleSheet.create({
     padding: 10,
     paddingHorizontal: 12,
     borderRadius: 15,
-    backgroundColor: "white", // Ensure background color is set
+    backgroundColor: "white",
     minWidth: 60,
-    
   },
-  
   messageText: {
     fontSize: 16,
     flexWrap: "wrap",
@@ -318,10 +551,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#fff",
   },
-  inputContainer: {
+  inputContainerBox: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 10,
     marginTop: 10,
+    paddingBottom: 15,
+
+  },
+  sendButtonCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#574E47",
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     flex: 1,
@@ -331,18 +575,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 17,
-    marginRight: 10,
     backgroundColor: "rgb(234, 230, 229)",
-    marginBottom: 15,
     color: "#574E47",
     fontFamily: 'Nunito-medium',
-  },
-  sendButton: {
-    backgroundColor: "#574E47",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginBottom: 15,
   },
   sendButtonText: {
     color: "#fff",
@@ -353,19 +588,50 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(96, 85, 74, 0.4)",
+    width: "100%",
   },
   modalContent: {
     backgroundColor: "white",
-    padding: 20,
+    padding: 30,
     borderRadius: 10,
     alignItems: "center",
     width: 300,
+    borderWidth: 5,
+    height: 400,
+    borderColor: '#D7C5B7',
+  },
+  selectFindingmodalContent: {
+    backgroundColor: "white",
+    padding: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    width: 300,
+    height: 520,
+    borderWidth: 5,
+    borderColor: '#D7C5B7',
+  },
+  profileModalContent: {
+    backgroundColor: "white",
+    padding: 40,
+    borderRadius: 10,
+    alignItems: "center",
+    width: 300,
+    borderWidth: 5,
+    borderColor: '#D7C5B7',
+  },
+  findingModalContent: {
+    backgroundColor: "white",
+    padding: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 5,
+    borderColor: '#D7C5B7',
   },
   profileUsername: {
     fontSize: 20,
     fontFamily: 'Nunito-bold',
-    maxWidth: 150,  
+    maxWidth: 150,
     color: "#574E47",
   },
   profileImage: {
@@ -382,20 +648,96 @@ const styles = StyleSheet.create({
   infoTextValue: {
     fontSize: 14,
   },
-  closeIcon: {
-    position: "absolute",
-    top: 15,
-    right: 15,
-    zIndex: 10, 
-  },
   hr: {
     borderBottomWidth: 1,
-    borderBottomColor: "rgb(117, 102, 82)",
+    borderBottomColor: "rgb(187, 169, 156)",
     marginVertical: 10,
     padding: 0,
   },
-
+  mushroomList: {
+    backgroundColor: '#fff',
+    borderColor: '#574E47',
+    borderWidth: 1,
+    borderRadius: 10,
+    maxHeight: 150,
+    marginVertical: 10,
+  },
+  mushroomItem: {
+    padding: 10,
+    borderBottomColor: '#eee',
+    borderBottomWidth: 1,
+  },
+  mushroomName: {
+    fontFamily: 'Nunito-Bold',
+    color: '#574E47',
+  },
+  linkText: {
+    color: "white",
+    fontFamily: 'Nunito-ExtraBold',
+    borderBottomWidth: 1, borderBottomColor: 'white'
+  },
+  modalTitle: {
+    fontSize: 24,
+    color: '#574E47',
+    textAlign: 'center',
+    fontFamily: 'Nunito-Bold',
+  },
+  thumbnail: {
+    width: 100,
+    height: 100,
+    margin: 5,
+  },
+  closeButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginTop: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#D7C5B7",
+    width: 200,
+    alignSelf: "center",
+  },
+  closeButtonText: {
+    color: '#574E47',
+    fontFamily: 'Nunito-Bold',
+  },
+  findingPhoto: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 15,
+    marginTop: 15,
+  },
+  messageTextContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+  },
+  modalRowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '70%',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderColor: '#D7C5B780',
+  },
+  modalSubHeader: {
+    fontSize: 16,
+    color: '#574E47',
+    fontFamily: 'Nunito-Bold',
+    minWidth: 70,
+    marginRight: 30,
+  },
 });
 
 export default ChatScreen;
+
+
+
+
+
 

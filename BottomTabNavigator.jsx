@@ -49,9 +49,7 @@ export default function BottomTabNavigator({ navigation }) {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{
-          headerRight: () => <LogoutButton navigation={navigation} />,
-        }}
+        
       />
       <Tab.Screen name="Library" component={LibraryStackNavigator} />
       <Tab.Screen
