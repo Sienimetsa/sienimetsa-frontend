@@ -12,6 +12,9 @@ import { fetchCurrentUser, fetchAllUsers } from "../Service/Fetch.js";
 import Toast from "react-native-toast-message";
 import { Ionicons } from "@expo/vector-icons";
 import * as Progress from 'react-native-progress';
+import { ScrollView } from 'react-native';
+
+
 
 
 const COLORS = [
@@ -221,7 +224,7 @@ export default function ProfileScreen({ navigation }) {
           Keyboard.dismiss();  // Dismiss the keyboard
         }}
       >
-
+ <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View style={styles.container}>
 
           <View style={styles.introContainerBox}>
@@ -416,6 +419,7 @@ export default function ProfileScreen({ navigation }) {
           <Toast />
 
         </View>
+        </ScrollView>
       </TouchableWithoutFeedback>
     </ImageBackground>
   );
@@ -427,15 +431,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     borderRadius: 30,
-    paddingTop: 20,
+  
     justifyContent: "center",
     alignItems: "center",
+    justifyContent: "flex-start",
+    
   },
   introContainerBox: {
+    marginTop: 30,
     backgroundColor: "rgba(255, 255, 255, 0.93)",
     borderRadius: 20,
-    padding: 30,
-    paddingBottom: 30,
+    paddingHorizontal: 20, 
+    paddingVertical: 20,
     shadowColor: "rgb(156, 131, 102)",
     shadowOffset: {
       width: 0,
@@ -443,21 +450,25 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
-
+    elevation: 5, 
+    maxWidth: 500,          
+    alignSelf: 'center',
   },
+  
   introContainer: {
     flexDirection: 'row',
     gap: 20,
     alignItems: 'center',
     paddingBottom: 20,
     paddingTop: 30,
+    width: '90%',   
   },
   infoTextLabel: {
     fontFamily: 'Nunito-ExtraBold',
     fontWeight: "bold",
     color: '#574E47',
     fontSize: 14,
+    
   },
   infoTextValue: {
     fontFamily: 'Nunito-Medium',

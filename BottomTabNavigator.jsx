@@ -41,7 +41,7 @@ export default function BottomTabNavigator({ navigation }) {
           shadowColor: 'transparent', // Remove shadow on iOS
           elevation: 0, // Remove shadow on Android
           borderBottomWidth: 0, // Remove bottom border
-          height: 80, // Increase header height
+          height: 100, // Increase header height
         },
         headerTintColor: 'white',
         headerTitleStyle: {
