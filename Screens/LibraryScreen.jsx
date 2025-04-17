@@ -1,4 +1,4 @@
-import { FlatList, Image, ImageBackground, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
+import { FlatList, Image, ImageBackground, Keyboard, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { fetchMushroomsData, fetchUserFindings } from '../Service/Fetch';
 import { Modal } from 'react-native';
@@ -23,7 +23,11 @@ export default function LibraryScreen({ navigation }) {
     const fetchAllMushroomData = async () => {
       const result = await fetchMushroomsData();
       if (!result.error) {
-        setMushroomData(result);
+        // Sort the mushroom data alphabetically by common name
+        const sortedMushrooms = [...result].sort((a, b) =>
+          a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase())
+        );
+        setMushroomData(sortedMushrooms);
       } else {
         if (result.error === "No JWT token found.") {
           navigation.navigate("Login");
@@ -112,7 +116,9 @@ export default function LibraryScreen({ navigation }) {
   const toggleFilterFound = () => {
     if (!toggleFilter) {
       setToggleFilter(true);
-      const filteredData = mushroomData.filter(item => findingIds.includes(item.m_id));
+      const filteredData = mushroomData.filter(item => findingIds.includes(item.m_id))
+        // Sort filtered data alphabetically
+        .sort((a, b) => a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase()));
       setMushroomData(filteredData);
     }
     else {
@@ -120,7 +126,11 @@ export default function LibraryScreen({ navigation }) {
       const fetchAllMushroomData = async () => {
         const result = await fetchMushroomsData();
         if (!result.error) {
-          setMushroomData(result);
+          // Sort the mushroom data alphabetically by common name
+          const sortedMushrooms = [...result].sort((a, b) =>
+            a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase())
+          );
+          setMushroomData(sortedMushrooms);
         } else {
           if (result.error === "No JWT token found.") {
             navigation.navigate("Login");
@@ -136,150 +146,155 @@ export default function LibraryScreen({ navigation }) {
   };
 
   return (
-    <ImageBackground
-      source={require('../assets/Backgrounds/sieni-bg.jpg')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground
+        source={require('../assets/Backgrounds/sieni-bg.jpg')}
+        style={styles.container}
+        resizeMode="cover"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
 
-          {/* FILTER BLOCK */}
-          <View style={styles.titleContainer}>
-            {toggleFilter ?
-              <Text style={styles.title}>Found Mushrooms</Text> :
-              <Text style={styles.title}>All Mushrooms</Text>
-            }
-          </View>
-          <View style={styles.filterContainer}>
-
-            {/* SEARCH BAR */}
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Search mushrooms..."
-                value={searchText}
-                onChangeText={setSearchText}
-              />
+            {/* FILTER BLOCK */}
+            <View style={styles.titleContainer}>
+              {toggleFilter ?
+                <Text style={styles.title}>Found Mushrooms</Text> :
+                <Text style={styles.title}>All Mushrooms</Text>
+              }
             </View>
+            <View style={styles.filterContainer}>
 
-            {/* TOGGLE BUTTON */}
-            <View>
-              <TouchableOpacity
-                style={styles.toggleButton}
-                onPress={() => toggleFilterFound()}>
-                {toggleFilter ?
-                  <Ionicons name="list-circle" size={30} color="#574E47" /> :
-                  <Ionicons name="list-circle-outline" size={30} color="#574E47" />
-                }
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.introContainerBox}>
-            {/* FLATLIST BLOCK */}
-            {filteredMushroomList.length > 0 ? (
-              <FlatList
-                data={filteredMushroomList}
-                renderItem={renderItem}
-                keyExtractor={item => item.m_id.toString()}
-              />
-            ) : (
-              <View style={styles.emptyStateContainer}>
-                <Ionicons name="leaf-outline" size={50} color="#574E47" style={{ marginBottom: 20 }} />
-                <Text style={styles.emptyStateText}>
-                  {toggleFilter ? "No found mushrooms yet" : "No matching mushrooms"}
-                </Text>
-                {toggleFilter && (
-                  <Text style={styles.emptyStateSubtext}>
-                    Explore and add mushrooms to your collection!
-                  </Text>
-                )}
+              {/* SEARCH BAR */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Search mushrooms..."
+                  value={searchText}
+                  onChangeText={setSearchText}
+                />
               </View>
-            )}
 
-            {/* MODAL BLOCK */}
-            <Modal visible={modalVisible} animationType="fade" transparent={true}>
-              <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-                <View style={styles.modalContainer}>
-                  <TouchableWithoutFeedback>
-                    <View style={styles.modalContent}>
-                      <View style={styles.imageContainer}>
-                        {imageLoading && (
-                          <View style={styles.imageLoadingContainer}>
-                            <ActivityIndicator size="large" color="#574E47" />
-                          </View>
-                        )}
-                        <Image
-                          source={
-                            mushroomPictureMap[selectedMushroom.mname] || require('../assets/mushroom-photos/mushroom_null.png')
-                          }
-                          style={styles.modalImage}
-                          onLoadStart={() => setImageLoading(true)}
-                          onLoadEnd={() => setImageLoading(false)}
-                        />
-                      </View>
-                      <Text style={styles.modalTitle}>{selectedMushroom.cmname}</Text>
-                      <Text style={styles.modalSubTitle}>{selectedMushroom.mname}</Text>
+              {/* TOGGLE BUTTON */}
+              <View>
+                <TouchableOpacity
+                  style={styles.toggleButton}
+                  onPress={() => toggleFilterFound()}>
+                  {toggleFilter ?
+                    <Ionicons name="list-circle" size={30} color="#574E47" /> :
+                    <Ionicons name="list-circle-outline" size={30} color="#574E47" />
+                  }
+                </TouchableOpacity>
+              </View>
+            </View>
 
-                      <View style={styles.modalRowContainer}>
-                        <Text style={styles.modalSubHeader}>Toxicity Level: </Text>
-                        <ToxicityIndicator toxicity_level={selectedMushroom.toxicity_level} />
-                      </View>
-
-                      <View style={styles.modalRowContainer}>
-                        <Text style={styles.modalSubHeader}>Color: </Text>
-                        <Text style={styles.modalText}>{selectedMushroom.color}</Text>
-                      </View>
-
-                      <View style={styles.modalRowContainer}>
-                        <Text style={styles.modalSubHeader}>Gills: </Text>
-                        <Text style={styles.modalText}>{selectedMushroom.gills}</Text>
-                      </View>
-
-                      <View style={styles.modalRowContainer}>
-                        <Text style={styles.modalSubHeader}>Cap: </Text>
-                        <Text style={styles.modalText}>{selectedMushroom.cap}</Text>
-                      </View>
-
-                      <View style={styles.modalRowContainer}>
-                        <Text style={styles.modalSubHeader}>Taste: </Text>
-                        <Text style={styles.modalText}>{selectedMushroom.taste}</Text>
-                      </View>
-
-                      {findingIds.includes(selectedMushroom.m_id) && (
-                        <TouchableOpacity
-                          style={styles.buttonFinding}
-                          onPress={() => {
-                            setModalVisible(false);
-                            navigation.navigate('FindingsScreen', {
-                              mushroomId: selectedMushroom.m_id,
-                              mushroomName: selectedMushroom.mname,
-                              mushroomCommonName: selectedMushroom.cmname,
-                            });
-                          }}>
-                          <Text style={styles.findingsButtonText}>View Findings →</Text>
-                        </TouchableOpacity>
-                      )}
-
-                      <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>
-                          Close
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </TouchableWithoutFeedback>
+            <View style={styles.introContainerBox}>
+              {/* FLATLIST BLOCK */}
+              {filteredMushroomList.length > 0 ? (
+                <FlatList
+                  data={filteredMushroomList}
+                  renderItem={renderItem}
+                  keyExtractor={item => item.m_id.toString()}
+                />
+              ) : (
+                <View style={styles.emptyStateContainer}>
+                  <Ionicons name="leaf-outline" size={50} color="#574E47" style={{ marginBottom: 20 }} />
+                  <Text style={styles.emptyStateText}>
+                    {toggleFilter ? "No found mushrooms yet" : "No matching mushrooms"}
+                  </Text>
+                  {toggleFilter && (
+                    <Text style={styles.emptyStateSubtext}>
+                      Explore and add mushrooms to your collection!
+                    </Text>
+                  )}
                 </View>
-              </TouchableWithoutFeedback>
-            </Modal>
+              )}
+
+              {/* MODAL BLOCK */}
+              <Modal visible={modalVisible} animationType="fade" transparent={true}>
+                <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                  <View style={styles.modalContainer}>
+                    <TouchableWithoutFeedback>
+                      <View style={styles.modalContent}>
+                        <View style={styles.imageContainer}>
+                          {imageLoading && (
+                            <View style={styles.imageLoadingContainer}>
+                              <ActivityIndicator size="large" color="#574E47" />
+                            </View>
+                          )}
+                          <Image
+                            source={
+                              mushroomPictureMap[selectedMushroom.mname] || require('../assets/mushroom-photos/mushroom_null.png')
+                            }
+                            style={styles.modalImage}
+                            onLoadStart={() => setImageLoading(true)}
+                            onLoadEnd={() => setImageLoading(false)}
+                          />
+                        </View>
+                        <Text style={styles.modalTitle}>{selectedMushroom.cmname}</Text>
+                        <Text style={styles.modalSubTitle}>{selectedMushroom.mname}</Text>
+
+                        <View style={styles.modalRowContainer}>
+                          <Text style={styles.modalSubHeader}>Toxicity Level: </Text>
+                          <ToxicityIndicator toxicity_level={selectedMushroom.toxicity_level} />
+                        </View>
+
+                        <View style={styles.modalRowContainer}>
+                          <Text style={styles.modalSubHeader}>Color: </Text>
+                          <Text style={styles.modalText}>{selectedMushroom.color}</Text>
+                        </View>
+
+                        <View style={styles.modalRowContainer}>
+                          <Text style={styles.modalSubHeader}>Gills: </Text>
+                          <Text style={styles.modalText}>{selectedMushroom.gills}</Text>
+                        </View>
+
+                        <View style={styles.modalRowContainer}>
+                          <Text style={styles.modalSubHeader}>Cap: </Text>
+                          <Text style={styles.modalText}>{selectedMushroom.cap}</Text>
+                        </View>
+
+                        <View style={styles.modalRowContainer}>
+                          <Text style={styles.modalSubHeader}>Taste: </Text>
+                          <Text style={styles.modalText}>{selectedMushroom.taste}</Text>
+                        </View>
+
+                        {findingIds.includes(selectedMushroom.m_id) && (
+                          <TouchableOpacity
+                            style={styles.buttonFinding}
+                            onPress={() => {
+                              setModalVisible(false);
+                              navigation.navigate('FindingsScreen', {
+                                mushroomId: selectedMushroom.m_id,
+                                mushroomName: selectedMushroom.mname,
+                                mushroomCommonName: selectedMushroom.cmname,
+                              });
+                            }}>
+                            <Text style={styles.findingsButtonText}>View Findings →</Text>
+                          </TouchableOpacity>
+                        )}
+
+                        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                          <Text style={styles.closeButtonText}>
+                            Close
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+            </View>
           </View>
-        </View>
-      </TouchableWithoutFeedback>
-    </ImageBackground>
+        </TouchableWithoutFeedback>
+      </ImageBackground>
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     paddingTop: 10,
@@ -376,7 +391,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
-    maxHeight: '78%',
+    flex: 1,
   },
   filterContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.93)",
