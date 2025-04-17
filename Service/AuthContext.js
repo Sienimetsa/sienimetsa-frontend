@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }) => {
   // LOGOUT: Function to log the user out
   const logout = async () => {
     try {
-      await AsyncStorage.clear();
+   await AsyncStorage.removeItem("jwtToken");
       setUser(null);
       console.log("User logged out.");
     } catch (error) {
