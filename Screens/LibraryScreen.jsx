@@ -1,11 +1,12 @@
 import { FlatList, Image, ImageBackground, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { fetchMushroomsData, fetchUserFindings } from '../Components/Fetch';
+import { fetchMushroomsData, fetchUserFindings } from '../Service/Fetch';
 import { Modal } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import mushroomPictureMap from '../Components/MushroomPictureMap';
 import { Ionicons } from "@expo/vector-icons";
 import ToxicityIndicator from "../Components/ToxicityIndicator";
+import { ActivityIndicator } from 'react-native';
 
 export default function LibraryScreen({ navigation }) {
   const [mushroomData, setMushroomData] = useState([]);
@@ -15,6 +16,7 @@ export default function LibraryScreen({ navigation }) {
   const [selectedMushroom, setSelectedMushroom] = useState({ mname: 'Information not available', toxicity_level: 'Information not available', color: 'Information not available', gills: 'Information not available', cap: 'Information not available', taste: 'Information not available' });
   const [searchText, setSearchText] = useState("");
   const [toggleFilter, setToggleFilter] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   // Call fetchAllMushroomData function
   useEffect(() => {
@@ -55,6 +57,7 @@ export default function LibraryScreen({ navigation }) {
   // Open mushroom detail modal and pass item data
   const openMushroomDetailModal = (item) => {
     setSelectedMushroom(item);
+    setImageLoading(true);
     setModalVisible(true)
   };
 
@@ -201,13 +204,23 @@ export default function LibraryScreen({ navigation }) {
                 <View style={styles.modalContainer}>
                   <TouchableWithoutFeedback>
                     <View style={styles.modalContent}>
-                      <Image
-                        source={
-                          mushroomPictureMap[selectedMushroom.mname] || require('../assets/mushroom-photos/mushroom_null.png')
-                        }
-                        style={styles.modalImage}
-                      />
-                      <Text style={styles.modalTitle}>{selectedMushroom.mname}</Text>
+                      <View style={styles.imageContainer}>
+                        {imageLoading && (
+                          <View style={styles.imageLoadingContainer}>
+                            <ActivityIndicator size="large" color="#574E47" />
+                          </View>
+                        )}
+                        <Image
+                          source={
+                            mushroomPictureMap[selectedMushroom.mname] || require('../assets/mushroom-photos/mushroom_null.png')
+                          }
+                          style={styles.modalImage}
+                          onLoadStart={() => setImageLoading(true)}
+                          onLoadEnd={() => setImageLoading(false)}
+                        />
+                      </View>
+                      <Text style={styles.modalTitle}>{selectedMushroom.cmname}</Text>
+                      <Text style={styles.modalSubTitle}>{selectedMushroom.mname}</Text>
 
                       <View style={styles.modalRowContainer}>
                         <Text style={styles.modalSubHeader}>Toxicity Level: </Text>
@@ -242,6 +255,7 @@ export default function LibraryScreen({ navigation }) {
                             navigation.navigate('FindingsScreen', {
                               mushroomId: selectedMushroom.m_id,
                               mushroomName: selectedMushroom.mname,
+                              mushroomCommonName: selectedMushroom.cmname,
                             });
                           }}>
                           <Text style={styles.findingsButtonText}>View Findings →</Text>
@@ -270,6 +284,27 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 10,
     paddingHorizontal: 10,
+  },
+  imageContainer: {
+    width: "50%",
+    height: undefined,
+    aspectRatio: 1,
+    margin: 10,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  imageLoadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
   found: {
     padding: 15,
@@ -310,17 +345,22 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
     fontFamily: 'Nunito-Bold',
     textAlign: 'center',
     color: '#574E47',
     width: '100%',
   },
+  modalSubTitle: {
+    fontSize: 18,
+    marginBottom: 10,
+    fontFamily: 'Nunito-Italic',
+    textAlign: 'center',
+    color: '#574E47',
+    width: '100%',
+  },
   modalImage: {
-    width: "50%",
-    height: undefined,
-    aspectRatio: 1,
-    margin: 10,
+    width: "100%",
+    height: "100%",
     resizeMode: "contain",
   },
   findingsButtonText: {

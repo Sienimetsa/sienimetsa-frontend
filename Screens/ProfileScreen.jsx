@@ -8,7 +8,7 @@ import axios from "axios";
 import { API_PROFILE_UPDATE } from "@env";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext.js";
-import { fetchCurrentUser, fetchAllUsers } from "../Components/Fetch.js";
+import { fetchCurrentUser, fetchAllUsers } from "../Service/Fetch.js";
 import Toast from "react-native-toast-message";
 import { Ionicons } from "@expo/vector-icons";
 import * as Progress from 'react-native-progress';

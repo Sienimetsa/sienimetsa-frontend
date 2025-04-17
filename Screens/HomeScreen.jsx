@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, Button, TouchableOpacity, Modal, Image, TextInp
 import { AuthContext } from "../Service/AuthContext";
 import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { fetchMushroomsData } from "../Components/Fetch";
+import { fetchMushroomsData } from "../Service/Fetch";
 import Toast from "react-native-toast-message";
 import { Ionicons } from "@expo/vector-icons";
-import { checkAIServerStatus, optimizeImageForAI, sendImageToAIService, findBestMushroomMatch, formatAIResults } from "../Components/AIService";
+import { checkAIServerStatus, optimizeImageForAI, sendImageToAIService, findBestMushroomMatch, formatAIResults } from "../Service/AIService";
 import { ImageBackground } from "react-native";
 import ToxicityIndicator from "../Components/ToxicityIndicator";
 
