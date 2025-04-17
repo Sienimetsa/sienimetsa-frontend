@@ -120,7 +120,7 @@ const ChatScreen = () => {
 
       setInput(""); // Clear input field after sending message
       setSelectedFinding(null); // Clear the selected finding
-      Keyboard.dismiss(); // Hide the keyboard
+ 
     } else {
       console.warn("WebSocket not connected.");
     }
