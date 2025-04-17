@@ -23,7 +23,11 @@ export default function LibraryScreen({ navigation }) {
     const fetchAllMushroomData = async () => {
       const result = await fetchMushroomsData();
       if (!result.error) {
-        setMushroomData(result);
+        // Sort the mushroom data alphabetically by common name
+        const sortedMushrooms = [...result].sort((a, b) =>
+          a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase())
+        );
+        setMushroomData(sortedMushrooms);
       } else {
         if (result.error === "No JWT token found.") {
           navigation.navigate("Login");
@@ -112,7 +116,9 @@ export default function LibraryScreen({ navigation }) {
   const toggleFilterFound = () => {
     if (!toggleFilter) {
       setToggleFilter(true);
-      const filteredData = mushroomData.filter(item => findingIds.includes(item.m_id));
+      const filteredData = mushroomData.filter(item => findingIds.includes(item.m_id))
+        // Sort filtered data alphabetically
+        .sort((a, b) => a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase()));
       setMushroomData(filteredData);
     }
     else {
@@ -120,7 +126,11 @@ export default function LibraryScreen({ navigation }) {
       const fetchAllMushroomData = async () => {
         const result = await fetchMushroomsData();
         if (!result.error) {
-          setMushroomData(result);
+          // Sort the mushroom data alphabetically by common name
+          const sortedMushrooms = [...result].sort((a, b) =>
+            a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase())
+          );
+          setMushroomData(sortedMushrooms);
         } else {
           if (result.error === "No JWT token found.") {
             navigation.navigate("Login");

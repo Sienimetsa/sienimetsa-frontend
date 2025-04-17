@@ -273,18 +273,26 @@ export default function HomeScreen() {
   const filteredMushroomList = useMemo(() => {
     const searchLower = searchText.toLowerCase().trim();
 
+    // Filter mushrooms
+    let filtered = mushroomList;
+
     // Special case for toxicity level exact matches
     if (searchLower === "low" || searchLower === "medium" || searchLower === "high") {
-      return mushroomList.filter(item =>
+      filtered = mushroomList.filter(item =>
         item.toxicity_level.toLowerCase() === searchLower
+      );
+    } else {
+      // Regular search across all fields
+      filtered = mushroomList.filter(item =>
+        item.mname.toLowerCase().includes(searchLower) ||
+        item.cmname.toLowerCase().includes(searchLower) ||
+        item.toxicity_level.toLowerCase().includes(searchLower)
       );
     }
 
-    // Regular search across all fields
-    return mushroomList.filter(item =>
-      item.mname.toLowerCase().includes(searchLower) ||
-      item.cmname.toLowerCase().includes(searchLower) ||
-      item.toxicity_level.toLowerCase().includes(searchLower)
+    // Sort alphabetically by common name (cmname)
+    return filtered.sort((a, b) =>
+      a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase())
     );
   }, [mushroomList, searchText]);
 
