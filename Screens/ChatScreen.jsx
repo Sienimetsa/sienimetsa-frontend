@@ -5,7 +5,7 @@ import { Client } from "@stomp/stompjs";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchCurrentUser, fetchUserProfileByUsername, fetchUserFindings } from "../Components/Fetch.js";
+import { fetchCurrentUser, fetchUserProfileByUsername, fetchUserFindings } from "../Service/Fetch.js";
 import { API_SOCKET_URL } from "@env";
 import { API_BASE_URL } from '@env';
 import { Keyboard } from "react-native";

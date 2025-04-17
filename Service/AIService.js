@@ -24,14 +24,14 @@ export const checkAIServerStatus = async () => {
 // Optimize an image for AI processing by resizing and compressing
 export const optimizeImageForAI = async (imageUri) => {
   try {
-    return await ImageManipulator.manipulateAsync(
+    // Import the manipulator
+    const result = ImageManipulator.manipulateAsync(
       imageUri,
-      [{ resize: { width: 300 } }], // Resize to smaller width
-      {
-        compress: 0.5,  // More aggressive compression
-        format: ImageManipulator.SaveFormat.JPEG
-      }
+      [{ resize: { width: 300 } }],
+      { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
     );
+
+    return result;
   } catch (error) {
     console.error("Image optimization failed:", error);
     return null;

@@ -10,6 +10,8 @@ import CreateFindingScreen from './Screens/CreateFindingScreen';
 import * as Font from 'expo-font';
 import { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
 
 const Stack = createStackNavigator();
 
@@ -64,7 +66,29 @@ export default function App() {
           <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Main" component={BottomTabNavigator} options={{ headerShown: false }} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="CreateFinding" component={CreateFindingScreen} />
+          <Stack.Screen
+            name="CreateFinding"
+            component={CreateFindingScreen}
+            options={({ navigation }) => ({
+              headerTitle: "Create New Finding",
+              headerTintColor: 'white',
+              headerStyle: {
+                backgroundColor: '#574E47',
+                shadowColor: 'transparent',
+                elevation: 0,
+                borderBottomWidth: 0,
+              },
+              headerTitleStyle: { fontFamily: 'Nunito-Bold' },
+              headerLeft: () => (
+                <TouchableOpacity
+                  style={{ marginLeft: 15 }}
+                  onPress={() => navigation.goBack()}
+                >
+                  <Ionicons name="arrow-back" size={24} color="white" />
+                </TouchableOpacity>
+              ),
+            })}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
