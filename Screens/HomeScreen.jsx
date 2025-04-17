@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState, useMemo } from "react";
-import { View, Text, StyleSheet, Button, TouchableOpacity, Modal, Image, TextInput, FlatList, ActivityIndicator, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { View, Text, StyleSheet, Button, TouchableOpacity, Modal, Image, TextInput, FlatList, ActivityIndicator, Keyboard, TouchableWithoutFeedback, Dimensions, ScrollView } from "react-native";
 import { AuthContext } from "../Service/AuthContext";
 import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -10,10 +10,13 @@ import { checkAIServerStatus, optimizeImageForAI, sendImageToAIService, findBest
 import { ImageBackground } from "react-native";
 import ToxicityIndicator from "../Components/ToxicityIndicator";
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export default function HomeScreen() {
   const { user, loading } = useContext(AuthContext);
   const navigation = useNavigation();
   const isFocused = useIsFocused();
+
 
   // CAMERA STATES
   const [facing, setFacing] = useState('back');
@@ -291,6 +294,37 @@ export default function HomeScreen() {
     [aiResults, mushroomList]
   );
 
+  // Render mushroom list item
+  const renderMushroomItem = ({ item }) => (
+    <TouchableOpacity
+      style={
+        mushroomId === item.m_id.toString()
+          ? styles.selectedListButton
+          : styles.ListButton
+      }
+      onPress={() => {
+        if (mushroomId === item.m_id.toString()) {
+          setMushroomId("");
+        } else {
+          setMushroomId(item.m_id.toString());
+        }
+      }}
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.ListCommon}>{item.cmname}</Text>
+          <Text style={styles.ListLatin}>{item.mname}</Text>
+        </View>
+        <View style={styles.toxicityContainer}>
+          <Text style={styles.ToxicityListText}>Toxicity</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <ToxicityIndicator toxicity_level={item.toxicity_level} />
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   // Render loading state
   if (loading) {
     return (
@@ -453,86 +487,58 @@ export default function HomeScreen() {
                     />
                   </View>
 
-                  {/* MUSHROOM LIST */}
+                  {/* MUSHROOM LIST - directly using FlatList, not nested in ScrollView */}
                   <View style={styles.listContainer}>
                     <FlatList
                       data={filteredMushroomList}
                       keyExtractor={(item) => item.m_id.toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          style={
-                            mushroomId === item.m_id.toString()
-                              ? styles.selectedListButton
-                              : styles.ListButton
-                          }
-                          onPress={() => {
-                            if (mushroomId === item.m_id.toString()) {
-                              setMushroomId("");
-                            } else {
-                              setMushroomId(item.m_id.toString());
-                            }
-                          }}
-                        >
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <View style={{ flex: 1 }}>
-                              <Text style={styles.ListCommon}>{item.cmname}</Text>
-                              <Text style={styles.ListLatin}>{item.mname}</Text>
-                            </View>
-                            <View style={styles.toxicityContainer}>
-                              <Text style={styles.ToxicityListText}>Toxicity</Text>
-                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <ToxicityIndicator toxicity_level={item.toxicity_level} />
-                              </View>
-                            </View>
-                          </View>
-                        </TouchableOpacity>
-                      )}
-                      style={{ maxHeight: 200, width: '100%' }}
+                      renderItem={renderMushroomItem}
+                      style={styles.mushroomList}
                     />
                   </View>
 
-                  {/* BUTTON ROW */}
+                  <View style={styles.buttonGroup}>
+                    {/* Create finding button */}
+                    <TouchableOpacity
+                      style={[styles.modalButton, !mushroomId && styles.disabledButton]}
+                      disabled={!mushroomId}
+                      onPress={() => {
+                        if (!mushroomId) {
+                          showToast("error", "Please select a mushroom first");
+                          return;
+                        }
 
-                  {/* Create finding button */}
-                  <TouchableOpacity
-                    style={[styles.modalButton, !mushroomId && styles.disabledButton]}
-                    disabled={!mushroomId}
-                    onPress={() => {
-                      if (!mushroomId) {
-                        showToast("error", "Please select a mushroom first");
-                        return;
-                      }
+                        const selectedMushroom = mushroomList.find(m => m.m_id.toString() === mushroomId);
+                        setReturnFromFinding(true);
 
-                      const selectedMushroom = mushroomList.find(m => m.m_id.toString() === mushroomId);
-                      setReturnFromFinding(true);
+                        navigation.navigate('CreateFinding', {
+                          photoUri,
+                          mushroomId,
+                          image,
+                          mushroomCommonName: selectedMushroom ? selectedMushroom.cmname : null,
+                          mushroomLatinName: selectedMushroom ? selectedMushroom.mname : null
+                        });
 
-                      navigation.navigate('CreateFinding', {
-                        photoUri,
-                        mushroomId,
-                        image,
-                        mushroomCommonName: selectedMushroom ? selectedMushroom.cmname : null,
-                        mushroomLatinName: selectedMushroom ? selectedMushroom.mname : null
-                      });
+                        setPhotoModalVisible(false);
+                      }}>
+                      <Text style={styles.modalCreateBtnText}>Create a finding</Text>
+                    </TouchableOpacity>
 
-                      setPhotoModalVisible(false);
-                    }}>
-                    <Text style={styles.modalCreateBtnText}>Create a finding</Text>
-                  </TouchableOpacity>
-
-                  {/* Close button */}
-                  <TouchableOpacity
-                    style={styles.modalCancelButton}
-                    onPress={closeModal}>
-                    <Text style={styles.modalCloseBtnText}>Close</Text>
-                  </TouchableOpacity>
+                    {/* Close button */}
+                    <TouchableOpacity
+                      style={styles.modalCancelButton}
+                      onPress={closeModal}>
+                      <Text style={styles.modalCloseBtnText}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </ImageBackground>
           </View>
         </TouchableWithoutFeedback>
         <Toast />
-      </Modal >
-    </View >
+      </Modal>
+    </View>
   );
 }
 
@@ -682,55 +688,57 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 15,
   },
   modalContentContainer: {
     backgroundColor: "#fff",
-    padding: 16,
+    padding: 12,
     borderRadius: 30,
-    width: "90%",
-    maxHeight: "90%",
+    width: "100%",
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 5,
     borderColor: '#D7C5B7',
+    maxHeight: SCREEN_HEIGHT * 0.9,
+    overflow: 'hidden',
   },
   photoAndAIContainer: {
     width: '100%',
-    flexDirection: 'row',
+    flexDirection: SCREEN_WIDTH > 350 ? 'row' : 'column',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 10,
   },
   photo: {
-    width: '35%',
-    height: 190,
+    width: SCREEN_WIDTH > 350 ? '35%' : '70%',
+    height: SCREEN_WIDTH > 350 ? 190 : 150,
     borderRadius: 10,
     borderColor: '#D7C5B7',
     borderWidth: 2,
-    marginRight: 10,
+    marginRight: SCREEN_WIDTH > 350 ? 10 : 0,
+    marginBottom: SCREEN_WIDTH > 350 ? 0 : 10,
     resizeMode: 'cover',
   },
   modalButton: {
-    paddingVertical: 10,
+    paddingVertical: SCREEN_HEIGHT < 700 ? 8 : 10,
     borderRadius: 30,
-    marginTop: 10,
+    marginBottom: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
     borderWidth: 2,
     borderColor: "#574E47",
     backgroundColor: "#574E47",
-    width: 200,
+    width: Math.min(200, SCREEN_WIDTH * 0.6),
     alignSelf: "center",
   },
   modalCancelButton: {
-    paddingVertical: 10,
+    paddingVertical: SCREEN_HEIGHT < 700 ? 8 : 10,
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
     borderColor: "#D7C5B7",
-    width: 200,
+    width: Math.min(200, SCREEN_WIDTH * 0.6),
     alignSelf: "center",
   },
   modalCreateBtnText: {
@@ -759,9 +767,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 3
   },
+  buttonGroup: {
+    width: '100%',
+    padding: SCREEN_HEIGHT < 700 ? 5 : 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+
   // ============= AI ANALYSIS STYLES =============
   aiResultsContainer: {
-    flex: 1,
+    flex: SCREEN_WIDTH > 350 ? 1 : 0,
+    width: SCREEN_WIDTH > 350 ? 'auto' : '100%',
     alignItems: 'center',
     marginBottom: 0,
   },
@@ -862,9 +879,9 @@ const styles = StyleSheet.create({
 
   // ============= SEARCH AND LIST STYLES =============
   searchContainer: {
-    width: '90%',
+    width: '95%',
     padding: 5,
-    marginTop: 10,
+    marginTop: 5,
   },
   searchBar: {
     height: 40,
@@ -877,8 +894,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Medium',
   },
   listContainer: {
-    width: '90%',
-    marginTop: 10,
+    width: '95%',
+    marginTop: 5,
+    height: SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.15 : SCREEN_HEIGHT * 0.2,
+    marginBottom: 10,
+  },
+  mushroomList: {
+    width: '100%',
+    height: '100%',
   },
   ListCommon: {
     fontSize: 18,
@@ -891,16 +914,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Italic',
   },
   ListButton: {
-    padding: 15,
-    marginVertical: 8,
+    padding: 12,
+    marginVertical: 5,
     backgroundColor: '#FFFFFF',
     borderRadius: 5,
     borderWidth: 2,
     borderColor: '#D7C5B7',
   },
   selectedListButton: {
-    padding: 15,
-    marginVertical: 8,
+    padding: 12,
+    marginVertical: 5,
     backgroundColor: '#D7C5B780',
     borderRadius: 5,
     borderWidth: 2,
