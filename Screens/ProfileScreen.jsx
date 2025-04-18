@@ -13,7 +13,7 @@ import Toast from "react-native-toast-message";
 import { Ionicons } from "@expo/vector-icons";
 import * as Progress from 'react-native-progress';
 import { ScrollView } from 'react-native';
-
+import OpenPdfButton from "../Components/PdfDownloadButton.js";
 
 
 
@@ -29,6 +29,7 @@ const COLORS = [
 ];
 export default function ProfileScreen({ navigation }) {
   const { user, setUser, logout, deleteAccount } = useContext(AuthContext); // Retrieve user data and actions from AuthContext
+  const [userId, setUserId] = useState(null);
   const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState("pp1");
@@ -50,6 +51,7 @@ export default function ProfileScreen({ navigation }) {
       const result = await fetchCurrentUser(setUser);
 
       if (!result.error) {
+        setUserId(result.u_id);
         setUsername(result.username);
         setProfilePicture(result.profilePicture);
         setChatColor(result.chatColor);
@@ -388,7 +390,7 @@ export default function ProfileScreen({ navigation }) {
                 secureTextEntry
               />
             </View>
-
+            <View style={{flexDirection: "row", alignItems: 'center', gap: 5,marginTop: 30,marginBottom: 20}}>
             {/* Save Button with Icon */}
             <TouchableOpacity
               testID="SaveChanges"
@@ -397,11 +399,17 @@ export default function ProfileScreen({ navigation }) {
             >
               <View style={styles.buttonContent}>
                 <Text style={styles.buttonText}>Save Changes</Text>
-                <Ionicons name="save" size={20} color="white" />
+                <Ionicons name="save" size={18} color="white" />
               </View>
             </TouchableOpacity>
 
+            {userId && <OpenPdfButton userId={userId} />}
+   
+            </View>
           </View>
+
+  
+
 
 
 
@@ -414,6 +422,7 @@ export default function ProfileScreen({ navigation }) {
             <View style={{ flexDirection: 'row', gap: 5 }}>
               <Text style={styles.buttonTextDelete}>Delete Account</Text>
               <Ionicons name="trash" size={20} color="black" />
+             
             </View>
           </TouchableOpacity>
           <Toast />
@@ -606,12 +615,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 30,
-    marginTop: 45,
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
     backgroundColor: "#574E47",
-    width: 200,
     alignSelf: "center",
   },
   buttonSaveUsername: {
@@ -644,7 +650,7 @@ const styles = StyleSheet.create({
 
   buttonText: {
     color: 'white',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
     fontFamily: 'Nunito-bold',
   },

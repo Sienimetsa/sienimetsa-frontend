@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
 
         const userData = { email: decoded.sub }; // Prepare user data from decoded token
         setUser(userData); // Set user data in context
+    
         return true;
       }
       return false;
@@ -125,7 +126,7 @@ export const AuthProvider = ({ children }) => {
   // LOGOUT: Function to log the user out
   const logout = async () => {
     try {
-   await AsyncStorage.removeItem("jwtToken");
+      await AsyncStorage.clear();
       setUser(null);
       console.log("User logged out.");
     } catch (error) {

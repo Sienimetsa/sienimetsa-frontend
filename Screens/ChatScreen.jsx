@@ -54,7 +54,6 @@ const ChatScreen = () => {
           console.error("Failed to load messages from storage", err);
         }
       };
-  
       restoreMessages();
     }, [])
   );
@@ -363,7 +362,7 @@ const ChatScreen = () => {
           data={messages}
           keyExtractor={(item, index) => index.toString()}
           initialNumToRender={20}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false})}
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => {
