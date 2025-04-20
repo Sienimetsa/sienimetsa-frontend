@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity,ImageBackground, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { AuthContext } from '../Service/AuthContext'; // Import AuthContext
 
 const SignupScreen = ({ navigation }) => {
@@ -32,6 +32,11 @@ const SignupScreen = ({ navigation }) => {
   };
 
   return (
+      <ImageBackground
+              source={require('../assets/Backgrounds/sieni-bg_2.jpg')}
+              style={styles.container}
+              resizeMode="cover"
+            >
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <Text style={styles.heading}>Sign Up</Text>
@@ -41,6 +46,7 @@ const SignupScreen = ({ navigation }) => {
           value={username}
           onChangeText={setUsername}
           placeholder="Username"
+               placeholderTextColor="rgba(66, 54, 45, 0.76)"
         />
         <TextInput
           style={styles.input}
@@ -48,12 +54,14 @@ const SignupScreen = ({ navigation }) => {
           onChangeText={setPassword}
           placeholder="Password"
           secureTextEntry
+               placeholderTextColor="rgba(66, 54, 45, 0.76)"
         />
         <TextInput
           style={styles.input}
           value={phone}
           onChangeText={setPhone}
           placeholder="Phone"
+               placeholderTextColor="rgba(66, 54, 45, 0.76)"
         />
         <TextInput
           style={styles.input}
@@ -61,12 +69,14 @@ const SignupScreen = ({ navigation }) => {
           onChangeText={setEmail}
           placeholder="Email"
           keyboardType="email-address"
+               placeholderTextColor="rgba(66, 54, 45, 0.76)"
         />
         <TextInput
           style={styles.input}
           value={country}
           onChangeText={setCountry}
           placeholder="Country"
+               placeholderTextColor="rgba(66, 54, 45, 0.76)"
         />
 
         <TouchableOpacity style={styles.button} onPress={handleSignup}>
@@ -84,6 +94,8 @@ const SignupScreen = ({ navigation }) => {
         </View>
       </View>
     </TouchableWithoutFeedback>
+       </ImageBackground>
+    
   );
 };
 
@@ -92,14 +104,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5',
+
   },
   heading: {
     fontSize: 30,
-    fontWeight: 'bold',
+    fontFamily: 'Nunito-bold',
     marginBottom: 20,
     textAlign: 'center',
-    color: '#333',
+    color: 'white',
   },
   input: {
     height: 50,
@@ -109,19 +121,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "rgba(167, 156, 149, 0.75)",
+    color:'white',
+    fontFamily: 'Nunito-Bold',
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor:"#e1e0dc",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 15,
   },
   buttonText: {
-    color: '#fff',
+    color: '#574E47',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Nunito-bold',
   },
   errorMessage: {
     color: 'red',
@@ -140,12 +154,19 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 16,
-    color: '#333',
+    color: 'white',
+    fontFamily: 'Nunito-Bold',
+    textShadowColor: 'rgba(67, 43, 15, 0.75)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 3,
   },
   loginLink: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: 'bold',
+    fontSize: 17,
+    color: "rgb(237, 230, 109)",
+    fontFamily: 'Nunito-Bold',
+    textShadowColor: 'rgba(52, 33, 12, 0.8)',
+    textShadowOffset: { width: 1, height: 3 },
+    textShadowRadius: 5,
   },
 });
 

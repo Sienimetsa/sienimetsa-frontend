@@ -2,37 +2,57 @@ import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, Alert, Linking, StyleSheet,Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_GDPR_PDF } from "@env";
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import MushroomIcon from "../assets/chaticons/mushroomIcon.png"
 const OpenPdfButton = ({ userId }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-  const handlePress = async () => {
-    try {
-      setIsLoading(true);
-
-      const token = await AsyncStorage.getItem("jwtToken");
-      if (!token) {
-        Alert.alert('Error', 'No token found. Please log in.');
-        return;
+    const handlePress = async () => {
+      try {
+        setIsLoading(true);
+    
+        const token = await AsyncStorage.getItem("jwtToken");
+        if (!token) {
+          Alert.alert('Error', 'No token found. Please log in.');
+          return;
+        }
+    
+        const url = `${API_GDPR_PDF}/${userId}`; 
+        const fileUri = FileSystem.documentDirectory + `gdpr-report-${userId}.pdf`;
+    
+        const downloadResumable = FileSystem.createDownloadResumable(
+          url,
+          fileUri,
+          {
+            headers: {
+              Authorization: `Bearer ${token}` // Passes the token in the Authorization header
+            }
+          }
+        );
+    
+        const { uri } = await downloadResumable.downloadAsync();
+    
+        if (uri) {
+          Alert.alert('Download complete', 'GDPR PDF downloaded successfully.');
+    
+          const isSharingAvailable = await Sharing.isAvailableAsync();
+          if (isSharingAvailable) {
+            await Sharing.shareAsync(uri);
+          } else {
+            Alert.alert("Note", "PDF saved, but your device doesn't support sharing from this app.");
+          }
+        }
+    
+      } catch (error) {
+        console.error('Download error:', error);
+        Alert.alert('Error', 'Failed to download the PDF');
+      } finally {
+        setIsLoading(false);
       }
-      // URL with token as a query parameter
-      const url = `${API_GDPR_PDF}/${userId}?token=${token}`;
-
-      // Check if the URL can be opened
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url); // Opens in the browser
-      } else {
-        Alert.alert('Error', 'Unable to open the PDF URL');
-      }
-    } catch (error) {
-      console.error('Error opening PDF:', error);
-      Alert.alert('Error', 'An error occurred while trying to open the PDF');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    
   return (
     <View style={styles.container}>
 
