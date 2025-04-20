@@ -42,6 +42,22 @@ const ChatScreen = () => {
       fetchUserDetails();
     }, [])
   );
+  useFocusEffect(
+    React.useCallback(() => {
+      const restoreMessages = async () => {
+        try {
+          const savedMessages = await AsyncStorage.getItem("chatMessages");
+          if (savedMessages) {
+            setMessages(JSON.parse(savedMessages));
+          }
+        } catch (err) {
+          console.error("Failed to load messages from storage", err);
+        }
+      };
+      restoreMessages();
+    }, [])
+  );
+  
 
   // WebSocket connection (runs only once)
   useEffect(() => {
@@ -315,13 +331,16 @@ const ChatScreen = () => {
     });
   };
 
-  // UPDATE UI WHEN 100 MESSAGES ARE REACHED
+  // UPDATE UI WHEN 50 MESSAGES ARE REACHED
   const addMessage = (newMessage) => {
     setMessages((prevMessages) => {
       const updatedMessages = [...prevMessages, newMessage];
-      if (updatedMessages.length > 100) {
+      if (updatedMessages.length > 50) {
         updatedMessages.shift();
       }
+      AsyncStorage.setItem("chatMessages", JSON.stringify(updatedMessages)).catch((err) =>
+        console.error("Failed to save messages", err)
+      );
       return updatedMessages;
     });
   };
@@ -343,7 +362,7 @@ const ChatScreen = () => {
           data={messages}
           keyExtractor={(item, index) => index.toString()}
           initialNumToRender={20}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false})}
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => {
@@ -531,12 +550,13 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "flex-start",
     marginTop: 10,
-    marginBottom: 5,
+    marginBottom: 10,
     padding: 10,
     paddingHorizontal: 12,
     borderRadius: 15,
     backgroundColor: "white",
     minWidth: 60,
+   
   },
   messageText: {
     fontSize: 16,
@@ -555,7 +575,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginTop: 10,
     paddingBottom: 15,
 
   },

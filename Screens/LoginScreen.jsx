@@ -1,7 +1,9 @@
 import React, { useState, useContext } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, TextInput, Dimensions, Text, StyleSheet,ImageBackground, TouchableOpacity, TouchableWithoutFeedback, Keyboard,Image } from 'react-native';
 import { AuthContext } from '../Service/AuthContext';
-
+import LogoText from "../assets/loginScreen/sienimetsa-text.png"
+import Logo from "../assets/loginScreen/sienimetsa-logo.png"
+const { width } = Dimensions.get('window');
 const LoginScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
@@ -13,20 +15,28 @@ const LoginScreen = ({ navigation }) => {
     if (success) {
       navigation.navigate('Main');
     } else {
-      setErrorMessage('Login failed. Please check your credentials.');
+      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
     }
   };
 
 
   return (
+       <ImageBackground
+          source={require('../assets/Backgrounds/sieni-bg_2.jpg')}
+          style={styles.container}
+          resizeMode="cover"
+        >
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-        <Text style={styles.heading}>Login</Text>
-
+       < View style={{flexDirection: "column", alignItems: 'center'}}>
+         <Image source={Logo} style={{ width: 100, height: 105, marginBottom: -28 }} />
+          <Image source={LogoText} style={styles.logo} />
+     </View>
         <TextInput
           value={email}
           onChangeText={setEmail}
           placeholder="Email"
+          placeholderTextColor="rgba(66, 54, 45, 0.76)"
           style={styles.input}
           keyboardType="email-address"
         />
@@ -35,6 +45,7 @@ const LoginScreen = ({ navigation }) => {
           value={password}
           onChangeText={setPassword}
           placeholder="Password"
+            placeholderTextColor="rgba(66, 54, 45, 0.76)"
           style={styles.input}
           secureTextEntry
         />
@@ -55,6 +66,7 @@ const LoginScreen = ({ navigation }) => {
         </View>
       </View>
     </TouchableWithoutFeedback>
+        </ImageBackground>
   );
 };
 
@@ -63,15 +75,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5',
+
   },
-  heading: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#333',
-  },
+
   input: {
     height: 50,
     borderColor: '#ccc',
@@ -80,19 +86,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "rgba(167, 156, 149, 0.75)",
+    color:'white',
+    fontFamily: 'Nunito-Bold',
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor:"#e1e0dc",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 15,
   },
   buttonText: {
-    color: '#fff',
+    color: '#574E47',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Nunito-bold',
   },
   errorMessage: {
     color: 'red',
@@ -103,15 +111,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 20,
+    marginBottom: 60,
+    shadowColor: '#000',
   },
   footerText: {
     fontSize: 16,
-    color: '#333',
+    color: 'white',
+    fontFamily: 'Nunito-Bold',
+    textShadowColor: 'rgba(67, 43, 15, 0.75)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 3,
+    
   },
   signupLink: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: 'bold',
+    fontSize: 17,
+    color: "rgb(237, 230, 109)",
+    fontFamily: 'Nunito-Bold',
+    textShadowColor: 'rgba(52, 33, 12, 0.8)',
+    textShadowOffset: { width: 1, height: 3 },
+    textShadowRadius: 5,
+  },
+  logo: {
+    width: width * 0.8,   // 80% of screen width
+    height: width * 0.32, // Maintain aspect ratio (e.g., 500:200 = 2.5)
+    resizeMode: 'contain', // Prevents stretching
+  },
+  errorMessage: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 15,
+    fontFamily: 'Nunito-Bold',
   },
 });
 

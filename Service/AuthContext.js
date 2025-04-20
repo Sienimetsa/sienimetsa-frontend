@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
 
         const userData = { email: decoded.sub }; // Prepare user data from decoded token
         setUser(userData); // Set user data in context
+    
         return true;
       }
       return false;
