@@ -1,4 +1,4 @@
-# 🍄 Sienimetsa Frontend
+# 🍄 Sienimetsä Frontend
 
 Frontend project for the "Software Project 2" course application. This frontend repository manages the user interface for "Sienimetsä" application.
 Sienimetsä is a mushroom detection mobile application featuring a user profile, AI-powered camera for identifying mushrooms, a chatroom for community interaction, a comprehensive mushroom library, and a personal log for tracking your own mushroom discoveries.
@@ -28,7 +28,7 @@ The sienimetsa-frontend project is the frontend component of the app, built usin
 
 Whether you're a seasoned mycologist or a curious explorer, Sienimetsä offers a smart, social, and educational experience for discovering and understanding mushrooms in nature.
 
-Made By @Sobi @Heta @Mio @Ossi
+Made By @SophiaDun @hetaheikkila @MaaJoo @Iso-S
 
 ### Pictures
 ![IMG_6877](https://github.com/user-attachments/assets/760c1e79-d928-442e-9f03-0c01fec34555)
