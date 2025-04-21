@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
+import Toast from 'react-native-toast-message';
 
 const Stack = createStackNavigator();
 
@@ -91,6 +92,7 @@ export default function App() {
           />
         </Stack.Navigator>
       </NavigationContainer>
+      <Toast />
     </AuthProvider>
 
   );
