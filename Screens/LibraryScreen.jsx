@@ -84,7 +84,7 @@ export default function LibraryScreen({ navigation }) {
             <View style={{ width: 50, height: 50 }}>
               <Image
                 source={mushroomPictureMap[item.mname] || require('../assets/mushroom-photos/mushroom_null.png')}
-                style={{ width: '100%', height: '100%', borderRadius: 5 }}
+                style={{ width: '100%', height: '100%', borderRadius: 5, resizeMode: 'contain', }}
               />
             </View>
             {foundStatus && (
