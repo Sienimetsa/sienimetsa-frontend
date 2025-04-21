@@ -2,10 +2,44 @@ import React, { memo, useState } from 'react';
 import { View, Text, Image, ActivityIndicator, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { API_BASE_URL } from '@env';
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from 'expo-clipboard';
+import Toast from "react-native-toast-message";
 
 
 const FindingModal = memo(({ finding, onClose, onDelete }) => {
   const [imageLoading, setImageLoading] = useState(true);
+
+  const copyLocationToClipboard = async () => {
+    try {
+      const textToCopy = finding.city || 'Unknown';
+      console.log('Attempting to copy:', textToCopy);
+
+      // Use the correct API method based on what's available
+      if (Clipboard.setStringAsync) {
+        await Clipboard.setStringAsync(textToCopy);
+      } else if (Clipboard.setString) {
+        await Clipboard.setString(textToCopy);
+      } else {
+        throw new Error('Clipboard API not available');
+      }
+
+      showToast('success', 'Location copied to clipboard');
+    } catch (error) {
+      console.error('Clipboard error:', error);
+      showToast('error', 'Failed to copy location');
+    }
+  };
+
+  // Helper function to show toast messages
+  const showToast = (type, message) => {
+    Toast.show({
+      type: type,
+      text1: message,
+      position: "bottom",
+      visibilityTime: 3000,
+      autoHide: true,
+    });
+  };
 
   if (!finding) return null;
 
@@ -72,12 +106,19 @@ const FindingModal = memo(({ finding, onClose, onDelete }) => {
 
       <View style={styles.modalRowContainer}>
         <Text style={styles.modalSubHeader}>Location: </Text>
-        <Text style={styles.modalText}>{finding.city || 'Unknown'}</Text>
+        <View style={styles.locationTextContainer}>
+          <Text style={styles.modalText} numberOfLines={2} ellipsizeMode="tail">
+            {finding.city || 'Unknown'}
+          </Text>
+          <TouchableOpacity onPress={copyLocationToClipboard} style={styles.copyButton}>
+            <Ionicons name="copy-outline" size={18} color="#574E47" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.notesContainer}>
         <View style={styles.notesTitleContainer}>
-          <Text style={styles.modalSubHeader}>Notes: </Text>
+          <Text style={styles.notesHeader}>Notes: </Text>
         </View>
         <ScrollView style={styles.notesScrollContainer} contentContainerStyle={styles.notesContentContainer}>
           <Text style={styles.notesText}>{finding.notes || 'No notes available'}</Text>
@@ -106,6 +147,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 5,
     borderColor: '#D7C5B7',
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  copyButton: {
+    padding: 5,
+    marginLeft: 8,
+    alignSelf: 'center',
   },
   imageContainer: {
     width: '90%',
@@ -147,15 +198,33 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
     paddingHorizontal: 10,
-    borderBottomWidth: 1,
+    borderWidth: 1,
     borderColor: '#D7C5B780',
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  locationTextContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   notesContainer: {
     width: '90%',
-    marginTop: 10,
+    marginTop: 30,
+    position: 'relative',
   },
   notesTitleContainer: {
+    position: 'absolute',
+    top: -19,
     paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    zIndex: 1,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: '#D7C5B780',
+    borderTopEndRadius: 8,
+    borderTopStartRadius: 8,
   },
   modalSubHeader: {
     fontSize: 16,
@@ -163,12 +232,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Bold',
     minWidth: 70,
     marginRight: 30,
+    alignSelf: 'center'
+  },
+  notesHeader: {
+    fontSize: 16,
+    color: '#574E47',
+    fontFamily: 'Nunito-Bold',
   },
   modalText: {
     fontFamily: 'Nunito-Medium',
     flexShrink: 1,
     textAlign: 'right',
     color: '#574E47',
+    maxWidth: '85%',
   },
   closeButton: {
     paddingVertical: 12,
@@ -248,8 +324,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D7C5B780',
     borderRadius: 8,
+    borderTopStartRadius: 0,
     paddingHorizontal: 10,
-    paddingTop: 5,
+    paddingTop: 10,
+    paddingBottom: 5,
   },
   notesContentContainer: {
     flexGrow: 1,

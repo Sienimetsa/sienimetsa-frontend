@@ -386,7 +386,7 @@ const ChatScreen = () => {
           <View style={[styles.inputContainerBox]}>
             {/* Mushroom Icon */}
             <TouchableOpacity onPress={() => setActiveModal('mushroom')}>
-              <Image source={MushroomIcon} style={{ width: 35, height: 35 }} />
+              <Image source={MushroomIcon} style={{ width: 35, height: 35, resizeMode: 'contain', }} />
             </TouchableOpacity>
 
             {/* Input Text */}
@@ -705,6 +705,11 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     margin: 5,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#D7C5B7',
+    overflow: 'hidden',
+    backgroundColor: '#f8f8f8',
   },
   closeButton: {
     paddingVertical: 12,

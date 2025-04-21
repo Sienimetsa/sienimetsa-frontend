@@ -20,6 +20,7 @@
     "base64-js": "^1.5.1",
     "expo": "~52.0.30",
     "expo-camera": "~16.0.16",
+    "expo-clipboard": "~7.0.1",
     "expo-file-system": "^18.0.12",
     "expo-font": "^13.0.4",
     "expo-image-manipulator": "~13.0.6",
