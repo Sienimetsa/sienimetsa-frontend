@@ -63,9 +63,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   // SIGNUP: Function to handle user signup
-  const signup = async (username, password, phone, email, country, chatColor, profilePicture) => {
+  const signup = async ({
+    username,
+    password,
+    phone,
+    email,
+    country,
+    chatColor,
+    profilePicture,
+    dryRun = false,
+  }) => {
     try {
-      // Make a POST request to the signup endpoint with the user data
       const response = await axios.post(`${API_MOBILE_SIGNUP}`, {
         username,
         password,
@@ -74,20 +82,21 @@ export const AuthProvider = ({ children }) => {
         country,
         chatColor,
         profilePicture,
+        dryRun,
       });
-
+  
       if (response.status === 201) {
-        console.log("Signup successful");
         return true;
       } else {
         console.error("Signup failed");
-        return false;
+        throw new Error("Unexpected response status");
       }
     } catch (error) {
       console.error("Error during signup:", error);
-      return false;
+      throw error;
     }
   };
+  
 
   // DELETE ACCOUNT: Function to delete a user's account from the backend
   const deleteAccount = async () => {

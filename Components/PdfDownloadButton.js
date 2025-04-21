@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, Alert, Linking, StyleSheet,Image } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, Alert, StyleSheet,Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_GDPR_PDF } from "@env";
 import * as FileSystem from 'expo-file-system';
