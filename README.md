@@ -28,8 +28,12 @@ The sienimetsa-frontend project is the frontend component of the app, built usin
 
 Whether you're a seasoned mycologist or a curious explorer, Sienimetsä offers a smart, social, and educational experience for discovering and understanding mushrooms in nature.
 
-Made By @SophiaDun @hetaheikkila @MaaJoo @Iso-S
-
+Made By:
+- Mio Kantola - [Maajoo](https://github.com/Maajoo)
+- Sophia Dunkley  - [SophiaDun](https://github.com/SophiaDun)
+- Ossi Saurio - [Iso-S](https://github.com/Iso-S)
+- Heta Heikkilä - [hetaheikkila](https://github.com/hetaheikkila)
+  
 ### Pictures
 ![IMG_6877](https://github.com/user-attachments/assets/760c1e79-d928-442e-9f03-0c01fec34555)
 ---
