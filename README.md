@@ -29,27 +29,39 @@ The sienimetsa-frontend project is the frontend component of the app, built usin
 Whether you're a seasoned mycologist or a curious explorer, Sienimetsä offers a smart, social, and educational experience for discovering and understanding mushrooms in nature.
 
 Made By:
-- Mio Kantola - [Maajoo](https://github.com/Maajoo)
-- Sophia Dunkley  - [SophiaDun](https://github.com/SophiaDun)
-- Ossi Saurio - [Iso-S](https://github.com/Iso-S)
-- Heta Heikkilä - [hetaheikkila](https://github.com/hetaheikkila)
+- 
+🌱 Sophia Dunkley  - [SophiaDun](https://github.com/SophiaDun)
+🪲 Heta Heikkilä - [hetaheikkila](https://github.com/hetaheikkila)
+🍀 Mio Kantola - [Maajoo](https://github.com/Maajoo)
+🌿 Ossi Saurio - [Iso-S](https://github.com/Iso-S)
   
 ### Pictures
-![IMG_6877](https://github.com/user-attachments/assets/760c1e79-d928-442e-9f03-0c01fec34555)
----
-![IMG_6878](https://github.com/user-attachments/assets/e56fb772-c3b6-40d4-a52c-92e9c6759df6)
----
-![IMG_6885](https://github.com/user-attachments/assets/3f5b528b-7eb6-4071-be81-fec283971e4c)
----
-![IMG_6879](https://github.com/user-attachments/assets/79ac6a98-bb5f-45e3-a265-71bd78b36d5e)
----
-![IMG_6880](https://github.com/user-attachments/assets/afebee4b-b567-43e2-96f8-f0b163f07ba2)
----
-![IMG_6881](https://github.com/user-attachments/assets/4faed45a-af70-460b-8636-9e10d87f4f1f)
----
-![IMG_6882](https://github.com/user-attachments/assets/5de1491b-aa3d-4a0d-850c-0e6de85f4022)
----
-![IMG_6883](https://github.com/user-attachments/assets/10949204-90d1-44d7-96a1-e78fde2cc450)
+![login](https://github.com/user-attachments/assets/04a25fa2-fbc3-441e-918f-b375197da94b)
+-
+![login2](https://github.com/user-attachments/assets/25f596c9-0191-47ee-91c3-2bb1eb85962c)
+-
+![thumbnail_IMG_5146 jpeg](https://github.com/user-attachments/assets/322ced03-f7fa-4d50-993b-7b8aaa616626)
+-
+![thumbnail_IMG_5134](https://github.com/user-attachments/assets/8a0e4110-2973-40cf-acd0-ede9b1f28173)
+-
+![thumbnail_IMG_5135](https://github.com/user-attachments/assets/3eb4733e-bfe4-4f63-a655-87442907c394)
+-
+![library](https://github.com/user-attachments/assets/a65f8c4e-e900-46ae-b1b7-5e4365ab22b2)
+-
+![found](https://github.com/user-attachments/assets/65388c91-ff49-4201-8bbc-d347aed22264)
+-
+![finding](https://github.com/user-attachments/assets/f07e3485-26e6-4df8-8ca4-9dc1cf73938c)
+-
+![finding2](https://github.com/user-attachments/assets/ae3cf053-b4bc-4066-a76d-c477e32cc051)
+-
+![profile](https://github.com/user-attachments/assets/08f6ba12-8cd8-4fa3-a4f0-68b5669943f5)
+-
+![chat](https://github.com/user-attachments/assets/95191944-84f0-47dd-8367-6a3878e2f5b2)
+-
+![linkinchat2](https://github.com/user-attachments/assets/bad1759c-a9e2-4235-858d-8621463a73f0)
+-
+![linkinchat](https://github.com/user-attachments/assets/8fd0ca91-d584-4566-af39-90e27ddced28)
+
 ---
 
 ## 🛠️ Built With
@@ -74,6 +86,7 @@ Made By:
 - [x] Implement python mushroom identification service
 - [x] Multiuser chat
 - [ ] Publish app on Heroku / Firebase / Render.com
+- [ ] Develope AI (python) forward
 
 ---
 
@@ -97,9 +110,9 @@ To get a local copy up and running, follow these steps:
 ```bash
   npx expo start
   ```
-5. Open your camera on your device and read the Qr-code from your bash.
+5. Open your camera (on your mobile device) and read the Qr-code from your bash.
 
-## 🧪 Testing
+## 🧩 Testing
 This project uses jest with jest-expo and @testing-library/react-native.
 
 To run tests:
