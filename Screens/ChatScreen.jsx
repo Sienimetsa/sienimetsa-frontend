@@ -1,19 +1,17 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ImageBackground, Modal, Image, TouchableWithoutFeedback } from "react-native";
+import { View, Text, InteractionManager, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ImageBackground, Modal, Image, TouchableWithoutFeedback } from "react-native";
 import { Client } from "@stomp/stompjs";
 import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchCurrentUser, fetchUserProfileByUsername, fetchUserFindings } from "../Service/Fetch.js";
-import { API_SOCKET_URL } from "@env";
-import { API_BASE_URL } from '@env';
+import { API_SOCKET_URL, API_CHAT_HISTORY } from "@env";
 import { Keyboard } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MushroomIcon from "../assets/chaticons/mushroomIcon.png"
 import ToxicityIndicator from "../Components/ToxicityIndicator";
 const ChatScreen = () => {
-
   const { user, setUser } = useContext(AuthContext); // Retrieve user information from AuthContext
   const [messages, setMessages] = useState([]); // Stores chat messages
   const [input, setInput] = useState(""); // Stores input message
@@ -44,20 +42,51 @@ const ChatScreen = () => {
   );
   useFocusEffect(
     React.useCallback(() => {
-      const restoreMessages = async () => {
+      const restoreAndFetchMessages = async () => {
         try {
           const savedMessages = await AsyncStorage.getItem("chatMessages");
+
+          let localMessages = [];
           if (savedMessages) {
-            setMessages(JSON.parse(savedMessages));
+            try {
+              localMessages = JSON.parse(savedMessages);
+              console.log("Parsed saved messages:", localMessages);
+            } catch (parseError) {
+              console.error("Failed to parse savedMessages", parseError);
+            }
           }
+          const token = await AsyncStorage.getItem("jwtToken");
+
+          const response = await fetch(`${API_CHAT_HISTORY}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          const serverMessages = await response.json();
+
+          const mergedMessages = [...localMessages, ...serverMessages]
+            .filter((msg, index, self) =>
+              index === self.findIndex((m) => m.timestamp === msg.timestamp && m.username === msg.username)
+            )
+            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+          setMessages(mergedMessages);
+
+          await AsyncStorage.setItem("chatMessages", JSON.stringify(mergedMessages));
         } catch (err) {
-          console.error("Failed to load messages from storage", err);
+          console.error("Failed to restore or fetch messages", err);
         }
       };
-      restoreMessages();
+
+      restoreAndFetchMessages();
     }, [])
   );
-  
 
   // WebSocket connection (runs only once)
   useEffect(() => {
@@ -136,7 +165,7 @@ const ChatScreen = () => {
 
       setInput(""); // Clear input field after sending message
       setSelectedFinding(null); // Clear the selected finding
- 
+
     } else {
       console.warn("WebSocket not connected.");
     }
@@ -144,23 +173,19 @@ const ChatScreen = () => {
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      InteractionManager.runAfterInteractions(() => {
+        setTimeout(() => {
+          flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+        }, 100); 
+      });
     });
-
-    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-
-    });
-
     return () => {
       keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
     };
-  }, [messages]);
+  }, []);
+
+
+
 
   // function to fetch user profile data
   const fetchUserProfileData = async (clickedUsername) => {
@@ -359,17 +384,22 @@ const ChatScreen = () => {
         {/* CHAT FLATLIST*/}
         <FlatList
           ref={flatListRef}
-          data={messages}
+          data={[...messages].reverse()} // reverse the array to show newest at the bottom
           keyExtractor={(item, index) => index.toString()}
-          initialNumToRender={20}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false})}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          inverted={true} // this flips the list so bottom is shown first
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => {
             const isOwnMessage = item.username === username;
             return (
               <View
-                style={[styles.messageContainer, { backgroundColor: item.chatColor || "#000", alignSelf: isOwnMessage ? "flex-end" : "flex-start", },]}>
+                style={[
+                  styles.messageContainer,
+                  {
+                    backgroundColor: item.chatColor || "#000",
+                    alignSelf: isOwnMessage ? "flex-end" : "flex-start",
+                  },
+                ]}
+              >
                 <TouchableOpacity onPress={() => handleUsernameClick(item.username)}>
                   <Text style={styles.username}>{item.username}</Text>
                 </TouchableOpacity>
@@ -382,30 +412,30 @@ const ChatScreen = () => {
           }}
         />
 
-            {/* CHAT INPUT */}
-          <View style={[styles.inputContainerBox]}>
-            {/* Mushroom Icon */}
-            <TouchableOpacity onPress={() => setActiveModal('mushroom')}>
-              <Image source={MushroomIcon} style={{ width: 35, height: 35, resizeMode: 'contain', }} />
-            </TouchableOpacity>
 
-            {/* Input Text */}
-            <TextInput
-              value={input}
-              onChangeText={setInput}
-              placeholder="Type a message"
-              style={styles.input}
-              onFocus={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            />
+        {/* CHAT INPUT */}
+        <View style={[styles.inputContainerBox]}>
+          {/* Mushroom Icon */}
+          <TouchableOpacity onPress={() => setActiveModal('mushroom')}>
+            <Image source={MushroomIcon} style={{ width: 35, height: 35, resizeMode: 'contain', }} />
+          </TouchableOpacity>
 
-            {/* Send Button */}
-            <TouchableOpacity onPress={sendMessage} style={styles.sendButtonCircle}>
-              <Ionicons name="send" size={22} color="#fff" paddingLeft={3} />
-            </TouchableOpacity>
-          </View>
+          {/* Input Text */}
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            placeholder="Type a message"
+            style={styles.input}
+            onFocus={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: false })}
+          />
+          {/* Send Button */}
+          <TouchableOpacity onPress={sendMessage} style={styles.sendButtonCircle}>
+            <Ionicons name="send" size={22} color="#fff" paddingLeft={3} />
+          </TouchableOpacity>
+        </View>
 
-  
-      {/* MODALS-> PROFILE, FINDINGS, MUSHROOM AND FINDING DETAILS */}
+
+        {/* MODALS-> PROFILE, FINDINGS, MUSHROOM AND FINDING DETAILS */}
         <Modal
           visible={activeModal !== null}
           animationType="fade"
@@ -414,121 +444,121 @@ const ChatScreen = () => {
         >
           <TouchableWithoutFeedback onPress={() => setActiveModal(null)}>
             <View style={styles.modalContainer}>
-                {activeModal === "profile" && (
-                  <View style={styles.modalContainer}>
-                    <View style={styles.profileModalContent}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
-                        {userProfile.profilePicture && (
-                          <Image
-                            source={profilePictureMap[userProfile.profilePicture]}
-                            style={styles.profileImage}
-                          />
-                        )}
-                        <View style={{ flexDirection: 'column', alignItems: 'end', gap: 2 }}>
-                          <Text style={styles.profileUsername} numberOfLines={1} adjustsFontSizeToFit>
-                            {userProfile.username}
-                          </Text>
-                          <View style={styles.hr} />
-                          <View style={{ flexDirection: 'row', gap: 2 }}>
-                            <Text style={styles.infoTextLabel}>Level:</Text>
-                            <Text style={styles.infoTextValue}>{userProfile.level}</Text>
-                          </View>
-                          <View style={{ flexDirection: 'row', gap: 2 }}>
-                            <Text style={styles.infoTextLabel}>Unique Mushrooms:</Text>
-                            <Text style={styles.infoTextValue}>{uniqueMushrooms}</Text>
-                          </View>
+              {activeModal === "profile" && (
+                <View style={styles.modalContainer}>
+                  <View style={styles.profileModalContent}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                      {userProfile.profilePicture && (
+                        <Image
+                          source={profilePictureMap[userProfile.profilePicture]}
+                          style={styles.profileImage}
+                        />
+                      )}
+                      <View style={{ flexDirection: 'column', alignItems: 'end', gap: 2 }}>
+                        <Text style={styles.profileUsername} numberOfLines={1} adjustsFontSizeToFit>
+                          {userProfile.username}
+                        </Text>
+                        <View style={styles.hr} />
+                        <View style={{ flexDirection: 'row', gap: 2 }}>
+                          <Text style={styles.infoTextLabel}>Level:</Text>
+                          <Text style={styles.infoTextValue}>{userProfile.level}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 2 }}>
+                          <Text style={styles.infoTextLabel}>Unique Mushrooms:</Text>
+                          <Text style={styles.infoTextValue}>{uniqueMushrooms}</Text>
                         </View>
                       </View>
-                      <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                      </TouchableOpacity>
                     </View>
+                    <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
+                      <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
                   </View>
-                )}
+                </View>
+              )}
 
-                {activeModal === "findings" && (
-                  <View style={styles.modalContainer}>
-                    <View style={styles.findingModalContent}>
-                      <View style={styles.modalRowContainer}>
-                        <Text style={styles.modalSubHeader}>Found by: </Text>
-                        <Text>{selectedFinding?.foundBy || "N/A"}</Text>
-                      </View>
-                      {selectedFinding?.photoUri ? (<Image source={{ uri: selectedFinding.photoUri }} style={styles.findingPhoto} />)
-                        : (<Text>No image available</Text>
-                        )}
-                      <Text style={styles.modalTitle}>{selectedFinding?.mname || 'Unknown Mushroom'}</Text>
-                      <Text>{selectedFinding?.mushroomName || "N/A"}</Text>
-                      <View style={styles.modalRowContainer}>
-                        <Text style={styles.modalSubHeader}>Toxicity level: </Text>
-                        <ToxicityIndicator toxicity_level={selectedFinding?.toxicity_level} />
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => {
-                          setActiveModal(null);
-                          setSelectedFinding(null);
-                        }} style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                      </TouchableOpacity>
+              {activeModal === "findings" && (
+                <View style={styles.modalContainer}>
+                  <View style={styles.findingModalContent}>
+                    <View style={styles.modalRowContainer}>
+                      <Text style={styles.modalSubHeader}>Found by: </Text>
+                      <Text>{selectedFinding?.foundBy || "N/A"}</Text>
                     </View>
-                  </View>
-                )}
-
-                {activeModal === "mushroom" && (
-                  <View style={styles.modalContainer}>
-
-                    <View style={styles.modalContent}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingBottom: 16, paddingTop: 16 }}>
-                        <Text style={styles.modalTitle}>Select a Mushroom</Text>
-                        <Image source={MushroomIcon} style={{ width: 30, height: 30 }} />
-                      </View>
-                      <FlatList
-                        data={foundMushrooms}
-                        keyExtractor={(item) => item.m_id.toString()}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity onPress={() => {
-                            fetchFindingsForMushroom(item.m_id);
-                            setActiveModal(false);
-                          }}>
-                            <Text style={styles.mushroomName}>{item.cmname}</Text>
-                            <View style={styles.hr} />
-                          </TouchableOpacity>
-                        )}
-                      />
-                      <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                      </TouchableOpacity>
+                    {selectedFinding?.photoUri ? (<Image source={{ uri: selectedFinding.photoUri }} style={styles.findingPhoto} />)
+                      : (<Text>No image available</Text>
+                      )}
+                    <Text style={styles.modalTitle}>{selectedFinding?.mname || 'Unknown Mushroom'}</Text>
+                    <Text>{selectedFinding?.mushroomName || "N/A"}</Text>
+                    <View style={styles.modalRowContainer}>
+                      <Text style={styles.modalSubHeader}>Toxicity level: </Text>
+                      <ToxicityIndicator toxicity_level={selectedFinding?.toxicity_level} />
                     </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setActiveModal(null);
+                        setSelectedFinding(null);
+                      }} style={styles.closeButton}>
+                      <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
                   </View>
-                )}
+                </View>
+              )}
 
-                {activeModal === "findingDetails" && (
-                  <View style={styles.modalContainer}>
+              {activeModal === "mushroom" && (
+                <View style={styles.modalContainer}>
 
-                    <View style={styles.selectFindingmodalContent}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingBottom: 16, paddingTop: 10 }}>
-                        <Text style={styles.modalTitle}>Select a Finding</Text>
-                        <Ionicons name="search" size={30} color="#574E47" />
-                      </View>
-
-                      <FlatList
-                        data={findingPhotos}
-                        keyExtractor={(item) => item.f_Id.toString()}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity onPress={() => handleFindingSelection(item)}>
-                            <Image
-                              source={{ uri: `${API_BASE_URL}/images/${item.imageURL}` }}
-                              style={styles.thumbnail}
-                            />
-                          </TouchableOpacity>
-                        )}
-                        numColumns={2}
-                      />
-                      <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                      </TouchableOpacity>
+                  <View style={styles.modalContent}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingBottom: 16, paddingTop: 16 }}>
+                      <Text style={styles.modalTitle}>Select a Mushroom</Text>
+                      <Image source={MushroomIcon} style={{ width: 30, height: 30 }} />
                     </View>
+                    <FlatList
+                      data={foundMushrooms}
+                      keyExtractor={(item) => item.m_id.toString()}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => {
+                          fetchFindingsForMushroom(item.m_id);
+                          setActiveModal(false);
+                        }}>
+                          <Text style={styles.mushroomName}>{item.cmname}</Text>
+                          <View style={styles.hr} />
+                        </TouchableOpacity>
+                      )}
+                    />
+                    <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
+                      <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
                   </View>
-                )}
+                </View>
+              )}
+
+              {activeModal === "findingDetails" && (
+                <View style={styles.modalContainer}>
+
+                  <View style={styles.selectFindingmodalContent}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingBottom: 16, paddingTop: 10 }}>
+                      <Text style={styles.modalTitle}>Select a Finding</Text>
+                      <Ionicons name="search" size={30} color="#574E47" />
+                    </View>
+
+                    <FlatList
+                      data={findingPhotos}
+                      keyExtractor={(item) => item.f_Id.toString()}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleFindingSelection(item)}>
+                          <Image
+                            source={{ uri: `${API_BASE_URL}/images/${item.imageURL}` }}
+                            style={styles.thumbnail}
+                          />
+                        </TouchableOpacity>
+                      )}
+                      numColumns={2}
+                    />
+                    <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.closeButton}>
+                      <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </View>
           </TouchableWithoutFeedback>
         </Modal>
@@ -556,7 +586,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: "white",
     minWidth: 60,
-   
+
   },
   messageText: {
     fontSize: 16,
@@ -759,10 +789,3 @@ const styles = StyleSheet.create({
 });
 
 export default ChatScreen;
-
-
-
-
-
-
-
