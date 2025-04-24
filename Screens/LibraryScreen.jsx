@@ -9,6 +9,7 @@ import ToxicityIndicator from "../Components/ToxicityIndicator";
 import { ActivityIndicator } from 'react-native';
 
 export default function LibraryScreen({ navigation }) {
+  const [allMushroomData, setAllMushroomData] = useState([]);
   const [mushroomData, setMushroomData] = useState([]);
   const [findingsData, setFindingsData] = useState([]);
   const [findingIds, setFindingIds] = useState([]);
@@ -27,6 +28,7 @@ export default function LibraryScreen({ navigation }) {
         const sortedMushrooms = [...result].sort((a, b) =>
           a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase())
         );
+        setAllMushroomData(sortedMushrooms);
         setMushroomData(sortedMushrooms);
       } else {
         if (result.error === "No JWT token found.") {
@@ -116,28 +118,14 @@ export default function LibraryScreen({ navigation }) {
   const toggleFilterFound = () => {
     if (!toggleFilter) {
       setToggleFilter(true);
-      const filteredData = mushroomData.filter(item => findingIds.includes(item.m_id))
+      const filteredData = allMushroomData.filter(item => findingIds.includes(item.m_id))
         // Sort filtered data alphabetically
         .sort((a, b) => a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase()));
       setMushroomData(filteredData);
     }
     else {
       setToggleFilter(false);
-      const fetchAllMushroomData = async () => {
-        const result = await fetchMushroomsData();
-        if (!result.error) {
-          // Sort the mushroom data alphabetically by common name
-          const sortedMushrooms = [...result].sort((a, b) =>
-            a.cmname.toLowerCase().localeCompare(b.cmname.toLowerCase())
-          );
-          setMushroomData(sortedMushrooms);
-        } else {
-          if (result.error === "No JWT token found.") {
-            navigation.navigate("Login");
-          }
-        }
-      };
-      fetchAllMushroomData();
+      setMushroomData([...allMushroomData]);
     }
   }
 
