@@ -6,7 +6,7 @@ import profilePictureMap from "../Components/ProfilePictureMap.js";
 import { AuthContext } from "../Service/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchCurrentUser, fetchUserProfileByUsername, fetchUserFindings } from "../Service/Fetch.js";
-import { API_SOCKET_URL, API_CHAT_HISTORY } from "@env";
+import { API_SOCKET_URL, API_CHAT_HISTORY, API_BASE_URL } from "@env";
 import { Keyboard } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MushroomIcon from "../assets/chaticons/mushroomIcon.png"
