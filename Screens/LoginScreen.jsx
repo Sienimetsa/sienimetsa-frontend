@@ -183,7 +183,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(67, 43, 15, 0.75)',
     textShadowOffset: { width: 1, height: 2 },
     textShadowRadius: 3,
-
   },
   privacyText: {
     fontSize: 16,
@@ -193,8 +192,10 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 2 },
     textShadowRadius: 3,
     textAlign: 'center',
-    bottom: -80,
-
+    position: 'absolute',
+    left: 0,
+    right: 0,
+   paddingTop: 60,
   },
   signupLink: {
     fontSize: 17,
