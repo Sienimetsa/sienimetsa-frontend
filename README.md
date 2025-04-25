@@ -85,8 +85,8 @@ Made By:
 - [x] Add user authentication
 - [x] Implement python mushroom identification service
 - [x] Multiuser chat
-- [ ] Publish app on Heroku / Firebase / Render.com
-- [ ] Develope AI (python) forward
+- [ ] Publish app
+- [ ] Improve AI (python)
 - [ ] Front-end optimization
  
 
@@ -101,18 +101,19 @@ To get a local copy up and running, follow these steps:
    git clone https://github.com/Sienimetsa/sienimetsa-frontend.git
    cd sienimetsa-frontend
    ```
-2. Download [Expo Go](https://expo.dev/go) mobile app on your device. You can download it from App Store (iPhone users) or Google Play Store (Android users).
+2. Add `.env` to the root of the project.
+3. Download [Expo Go](https://expo.dev/go) mobile app on your device. You can download it from App Store (iPhone users) or Google Play Store (Android users).
    
-3. Download all the depencies using this command:
+4. Download all the depencies using this command:
    ```bash
    npm install
    ```
    
-4. Start the app
+5. Start the app
 ```bash
   npx expo start
   ```
-5. Open your camera (on your mobile device) and read the Qr-code from your bash.
+6. Open your camera (on your mobile device) and read the Qr-code from your bash.
 
 ## 🧩 Testing
 This project uses jest with jest-expo and @testing-library/react-native.
