@@ -87,6 +87,8 @@ Made By:
 - [x] Multiuser chat
 - [ ] Publish app on Heroku / Firebase / Render.com
 - [ ] Develope AI (python) forward
+- [ ] Front-end optimization
+ 
 
 ---
 
