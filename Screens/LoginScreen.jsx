@@ -5,6 +5,7 @@ import LogoText from "../assets/loginScreen/sienimetsa-text.png"
 import Logo from "../assets/loginScreen/sienimetsa-logo.png"
 import TermsOfService from '../Components/TermsOfService';
 import PrivacyPolicy from '../Components/PrivacyPolicy';
+import Toast from 'react-native-toast-message';
 const { width } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
@@ -13,14 +14,48 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const showToast = (type, message) => {
+    Toast.show({
+      type: type,
+      text1: message,
+      position: 'bottom',
+      visibilityTime: 3000,
+      autoHide: true,
+    });
+  };
 
   const handleLogin = async () => {
-    const success = await login(email, password);
-    if (success) {
-      navigation.navigate('Main');
-    } else {
-      { errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null }
+    setIsLoading(true);
+
+    try {
+      if (!email || !password) {
+        showToast('error', 'Please fill in all fields.');
+        setIsLoading(false);
+        return;
+      }
+
+      let success;
+      try {
+        success = await login(email, password);
+      } catch (loginError) {
+        success = false;
+      }
+
+      if (success) {
+        showToast('success', 'Login successful!');
+        navigation.navigate('Main');
+      } else {
+        showToast('error', 'Invalid email or password.');
+      }
     }
+    catch (error) {
+      showToast('error', 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+
   };
 
   const openModal = () => {
@@ -55,7 +90,7 @@ const LoginScreen = ({ navigation }) => {
           <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? -180 : 0} 
+            keyboardVerticalOffset={Platform.OS === "ios" ? -180 : 0}
           >
             < View style={{ flexDirection: "column", alignItems: 'center' }}>
               <Image source={Logo} style={{ width: 100, height: 105, marginBottom: -28 }} />
@@ -128,7 +163,7 @@ const LoginScreen = ({ navigation }) => {
           </KeyboardAvoidingView>
         </View>
       </TouchableWithoutFeedback>
-
+      <Toast />
     </ImageBackground>
   );
 };
@@ -195,7 +230,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-   paddingTop: 60,
+    paddingTop: 60,
   },
   signupLink: {
     fontSize: 17,
