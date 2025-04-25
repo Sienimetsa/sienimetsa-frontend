@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   }, []); // Empty array ensures this effect runs once when the component mounts
 
 
-  
+
   // LOGIN: Function to handle user login
   const login = async (email, password) => {
     try {
@@ -52,12 +52,11 @@ export const AuthProvider = ({ children }) => {
 
         const userData = { email: decoded.sub }; // Prepare user data from decoded token
         setUser(userData); // Set user data in context
-    
+
         return true;
       }
       return false;
     } catch (error) {
-      console.error("Login error:", error);
       return false;
     }
   };
@@ -84,7 +83,7 @@ export const AuthProvider = ({ children }) => {
         profilePicture,
         dryRun,
       });
-  
+
       if (response.status === 201) {
         return true;
       } else {
@@ -96,7 +95,7 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-  
+
 
   // DELETE ACCOUNT: Function to delete a user's account from the backend
   const deleteAccount = async () => {
