@@ -11,6 +11,8 @@ import { Keyboard } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MushroomIcon from "../assets/chaticons/mushroomIcon.png"
 import ToxicityIndicator from "../Components/ToxicityIndicator";
+import mushroomPictureMap from "../Components/MushroomPictureMap.js";
+
 const ChatScreen = () => {
   const { user, setUser } = useContext(AuthContext); // Retrieve user information from AuthContext
   const [messages, setMessages] = useState([]); // Stores chat messages
@@ -176,7 +178,7 @@ const ChatScreen = () => {
       InteractionManager.runAfterInteractions(() => {
         setTimeout(() => {
           flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-        }, 100); 
+        }, 100);
       });
     });
     return () => {
@@ -509,18 +511,28 @@ const ChatScreen = () => {
                   <View style={styles.modalContent}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingBottom: 16, paddingTop: 16 }}>
                       <Text style={styles.modalTitle}>Select a Mushroom</Text>
-                      <Image source={MushroomIcon} style={{ width: 30, height: 30 }} />
+                      <Image source={MushroomIcon} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
                     </View>
+
                     <FlatList
                       data={foundMushrooms}
                       keyExtractor={(item) => item.m_id.toString()}
+                      numColumns={2}
                       renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => {
-                          fetchFindingsForMushroom(item.m_id);
-                          setActiveModal(false);
-                        }}>
-                          <Text style={styles.mushroomName}>{item.cmname}</Text>
-                          <View style={styles.hr} />
+                        <TouchableOpacity
+                          style={styles.mushroomGridItem}
+                          onPress={() => {
+                            fetchFindingsForMushroom(item.m_id);
+                            setActiveModal(false);
+                          }}
+                        >
+                          <Image
+                            source={mushroomPictureMap[item.mname] || require('../assets/mushroom-photos/mushroom_null.png')}
+                            style={styles.mushroomGridImage}
+                          />
+                          <Text style={styles.mushroomGridName} numberOfLines={2} ellipsizeMode="tail">
+                            {item.cmname}
+                          </Text>
                         </TouchableOpacity>
                       )}
                     />
@@ -647,8 +659,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: 300,
     borderWidth: 5,
-    height: 400,
+    height: 500,
     borderColor: '#D7C5B7',
+  },
+  mushroomGridItem: {
+    width: '45%',
+    padding: 10,
+    alignItems: 'center',
+    margin: 5,
+    borderRadius: 10,
+    borderColor: '#D7C5B7',
+    backgroundColor: '#D7C5B74d',
+    borderWidth: 2,
+    minHeight: 120,
+  },
+  mushroomGridImage: {
+    width: 70,
+    height: 70,
+    resizeMode: 'contain',
+    marginBottom: 5,
+  },
+  mushroomGridName: {
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 5,
+    fontFamily: 'Nunito-Bold',
+    color: '#574E47',
+    width: '100%',
   },
   selectFindingmodalContent: {
     backgroundColor: "white",
