@@ -86,7 +86,7 @@ Made By:
 - [x] Implement python mushroom identification service
 - [x] Multiuser chat
 - [ ] Publish app
-Future development ideas:
+## Future development ideas:
 - [ ] Fixing bugs on frontend (linking pictures to chat)
 - [ ] Possibility to edit findings later on
 - [ ] Optimizing frontend code & picture resolution
