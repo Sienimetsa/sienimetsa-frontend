@@ -515,9 +515,11 @@ const ChatScreen = () => {
                     </View>
 
                     <FlatList
+                      style={{ width: '100%' }}
                       data={foundMushrooms}
                       keyExtractor={(item) => item.m_id.toString()}
                       numColumns={2}
+                      columnWrapperStyle={{ justifyContent: foundMushrooms.length === 1 ? 'center' : 'space-between' }}
                       renderItem={({ item }) => (
                         <TouchableOpacity
                           style={styles.mushroomGridItem}
