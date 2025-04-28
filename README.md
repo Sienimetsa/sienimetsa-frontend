@@ -86,8 +86,14 @@ Made By:
 - [x] Implement python mushroom identification service
 - [x] Multiuser chat
 - [ ] Publish app
-- [ ] Improve AI (python)
-- [ ] Front-end optimization
+Future development ideas:
+- [ ] Fixing bugs on frontend (linking pictures to chat)
+- [ ] Possibility to edit findings later on
+- [ ] Optimizing frontend code & picture resolution
+- [ ] Validate registration
+- [ ] Develope AI forward
+- [ ] Level up visualization
+- [ ] Dynamic layout
  
 
 ---
